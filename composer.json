@@ -1,0 +1,53 @@
+{
+  "name": "jellytony/observability",
+  "description": "Distributed observability for Laravel made easy",
+  "keywords": [
+    "laravel",
+    "observability",
+    "zipkin",
+    "jaeger"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "JellyTony",
+      "email": "1402992668@qq.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.1",
+    "openzipkin/zipkin": "~2.0",
+    "illuminate/support": ">=5.4.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "JellyTony\\Observability\\": "src/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "JellyTony\\Observability\\Tests\\": "tests/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "JellyTony\\Observability\\TracingServiceProvider"
+      ]
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "prefer-stable": true
+}
