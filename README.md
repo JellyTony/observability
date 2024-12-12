@@ -1,5 +1,3 @@
-以下是 Markdown 原始格式，可以一键复制：
-
 # JellyTony/Observability 使用说明
 
 ## 项目简介
