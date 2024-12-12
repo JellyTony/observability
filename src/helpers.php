@@ -100,11 +100,24 @@ if (!function_exists('filter')) {
     }
 }
 
-// 保存异常错误信息
-if (!function_exists('saveError')) {
-    function saveError(\Exception $e)
+// 异常转换
+if (!function_exists('convertExceptionBizError')) {
+    function convertExceptionBizError(\Exception $e): array
     {
-        \Log::error("Caught exception: " . $e->getCode() . "msg: " . $e->getMessage());
+        $bizCode = 1004;
+        if ($e->getCode() > 1000) {
+            $bizCode = $e->getCode();
+        }
+
+        return [$bizCode, $e->getMessage()];
+    }
+}
+
+// 保存异常错误信息
+if (!function_exists('serverError')) {
+    function serverError(\Exception $e)
+    {
+        \Log::error("server Caught exception: " . $e->getCode() . "msg: " . $e->getMessage());
 
         $bizCode = 1004;
         if ($e->getCode() > 1000) {

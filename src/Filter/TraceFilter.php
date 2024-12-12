@@ -37,8 +37,19 @@ class TraceFilter implements Filter
             $headers[] = $k . ":" . $v;
         }
         $context->getRequest()->setCurlHeaders($headers);
-        $response = $next($context, $options);
+        try {
+            $response = $next($context, $options);
+            $this->terminate($context, $span);
+            return $response;
+        } catch (\Exception $e) {
+            $this->terminate($context, $span);
+            // 继续抛出异常
+            throw $e;
+        }
+    }
 
+    public function terminate(Context $context, $span)
+    {
         $span->tag(Tags\HTTP_STATUS_CODE, $context->getResponse()->getStatusCode());
         $span->tag(Tags\HTTP_RESPONSE_SIZE, $context->getResponse()->getBodySize());
         $span->tag(Constant::BIZ_CODE, $context->getBizCode());
@@ -46,7 +57,7 @@ class TraceFilter implements Filter
         if (!empty($context->getBizMsg()) && $context->getBizCode() > Constant::BIZ_CODE_SUCCESS) {
             $span->tag('error', $context->getBizMsg());
         }
-
-        return $response;
+        // 标志结束
+        $span->finish();
     }
 }

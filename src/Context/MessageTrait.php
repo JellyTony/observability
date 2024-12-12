@@ -13,9 +13,9 @@ trait MessageTrait
     /** @var string[] Map of lowercase header name => original name at registration */
     private $headerNames = [];
 
-    private $body;
+    private $body = '';
 
-    private $bodySize;
+    private $bodySize = 0;
 
     public function getProtocolVersion(): string
     {
@@ -24,26 +24,41 @@ trait MessageTrait
 
     public function getBody(): string
     {
+        if (empty($this->body)) {
+            return '';
+        }
         return $this->body;
     }
 
     public function getBodySize(): int
     {
+        if (empty($this->bodySize)) {
+            return 0;
+        }
         return $this->bodySize;
     }
 
     public function getHeaders(): array
     {
+        if (empty($this->headers)) {
+            return [];
+        }
         return $this->headers;
     }
 
     public function hasHeader($header): bool
     {
+        if (empty($this->headerNames)) {
+            return false;
+        }
         return isset($this->headerNames[strtolower($header)]);
     }
 
     public function getHeader($header): array
     {
+        if (empty($this->headers)) {
+            return [];
+        }
         $header = strtolower($header);
 
         if (!isset($this->headerNames[$header])) {

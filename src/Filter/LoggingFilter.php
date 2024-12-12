@@ -3,6 +3,7 @@
 namespace JellyTony\Observability\Filter;
 
 use Closure;
+use JellyTony\Observability\Constant\Constant;
 use JellyTony\Observability\Contracts\Filter;
 use JellyTony\Observability\Contracts\Context;
 
@@ -18,8 +19,22 @@ class LoggingFilter implements Filter
             $startTime = $options['start_time'];
         }
 
-        $reply = $next($context, $options);
-        $endTime = microtime(true);
+        try {
+            $reply = $next($context, $options);
+            $endTime = microtime(true);
+            $this->terminate($context, $startTime, $endTime);
+            return $reply;
+        } catch (\Exception $e) {
+            $endTime = microtime(true);
+            list($bizCode, $bizMsg) = convertExceptionBizError($e);
+            $context->setBizResult($bizCode, $bizMsg);
+            $this->terminate($context, $startTime, $endTime);
+            throw $e;
+        }
+    }
+
+    public function terminate(Context $context, $startTime, $endTime)
+    {
         if (!empty($options['end_time'])) {
             $endTime = $options['end_time'];
         }
@@ -60,7 +75,5 @@ class LoggingFilter implements Filter
         } else {
             \Log::debug('http client', ['global_fields' => $fields]);
         }
-
-        return $reply;
     }
 }

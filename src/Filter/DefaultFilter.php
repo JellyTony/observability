@@ -29,13 +29,13 @@ class DefaultFilter implements Filter
             return $next($context, $options);
         } catch (\Exception $e) {
             // 在这里做处理，如记录日志等
-            $this->handleException($context,$e);
+            $this->handleException($context, $e);
             // 继续抛出异常
             throw $e;
         }
     }
 
-    private function handleException(Context $context,\Exception $e)
+    private function handleException(Context $context, \Exception $e)
     {
         \Log::error("Caught exception: " . $e->getCode() . "msg: " . $e->getMessage());
 
