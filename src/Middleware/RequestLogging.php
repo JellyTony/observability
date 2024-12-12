@@ -5,6 +5,8 @@ namespace JellyTony\Observability\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Config\Repository;
+use JellyTony\Observability\Constant\Constant;
+use JellyTony\Observability\Metadata\Metadata;
 
 class RequestLogging
 {
@@ -57,7 +59,7 @@ class RequestLogging
             'http_status' => $response->status(),
             'http_size' => strlen($response->getContent()),
             'biz_code' => bizCode(),
-            'biz_msg'=> bizMsg()
+            'biz_msg' => bizMsg()
         ];
 
         if ($latency > $this->config->get($this->prefix . 'latency_threshold') || mpDebug()) {
@@ -71,12 +73,19 @@ class RequestLogging
         if ($this->debug || $this->config->get($this->prefix . 'dump_request_headers')) {
             $fields['req_header'] = $this->formatHeaders($request->headers->all());
         }
-        if (($this->debug || $this->config->get($this->prefix . 'dump_response_body')) && !empty($response->getContent())) {
-            $fields['reply_body'] = $response->getContent();
-        }
         if (($this->debug || $this->config->get($this->prefix . 'dump_response_headers')) && !empty($response->headers->all())) {
             $fields['reply_header'] = $this->formatHeaders($response->headers->all());
         }
+
+        if (!empty($reply) && $reply instanceof JsonResponse) {
+            // 获取 JSON 响应的数据
+            $responseData = $reply->getData(true);  // 将数据获取为数组
+
+            if (($this->debug || $this->config->get($this->prefix . 'dump_response_body')) && !empty($responseData)) {
+                $fields['reply_body'] = $responseData;
+            }
+        }
+
 
         // 根据慢日志阈值和错误情况记录日志
         if ($this->config->get($this->prefix . 'latency_threshold') > 0 && $latency > $this->config->get($this->prefix . 'latency_threshold')) {

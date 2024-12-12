@@ -4,9 +4,9 @@ namespace JellyTony\Observability\Filter;
 
 use Closure;
 use JellyTony\Observability\Constant\Constant;
-use JellyTony\Observability\Context\Request;
 use JellyTony\Observability\Contracts\Filter;
 use JellyTony\Observability\Contracts\Context;
+use JellyTony\Observability\Metadata\Metadata;
 
 class DefaultFilter implements Filter
 {
@@ -25,6 +25,27 @@ class DefaultFilter implements Filter
         }
         $context->getRequest()->setHeaders($headers);
 
-        return $next($context, $options);
+        try {
+            return $next($context, $options);
+        } catch (\Exception $e) {
+            // 在这里做处理，如记录日志等
+            $this->handleException($context,$e);
+            // 继续抛出异常
+            throw $e;
+        }
+    }
+
+    private function handleException(Context $context,\Exception $e)
+    {
+        \Log::error("Caught exception: " . $e->getCode() . "msg: " . $e->getMessage());
+
+        $bizCode = 1004;
+        if ($e->getCode() > 1000) {
+            $bizCode = $e->getCode();
+        }
+
+        $context->setBizResult($bizCode, $e->getMessage());
+        Metadata::set(Constant::BIZ_CODE, $bizCode);
+        Metadata::set(Constant::BIZ_MSG, $e->getMessage());
     }
 }

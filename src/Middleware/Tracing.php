@@ -149,7 +149,6 @@ class Tracing
             }
 
             $span->tag(Constant::BIZ_CODE, bizCode());
-            $span->tag(Constant::BIZ_MSG, bizMsg());
             if (bizCode() > Constant::BIZ_CODE_SUCCESS) {
                 $span->tag("error", bizMsg());
             }

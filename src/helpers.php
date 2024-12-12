@@ -1,5 +1,10 @@
 <?php
 
+use JellyTony\Observability\Context\Request;
+use JellyTony\Observability\Constant\Constant;
+use JellyTony\Observability\Metadata\Metadata;
+use JellyTony\Observability\Filter\FilterPipeline;
+
 if (!function_exists('getServiceName')) {
     function getServiceName(string $service): string
     {
@@ -57,7 +62,7 @@ if (!function_exists('appVersion')) {
 if (!function_exists('mpDebug')) {
     function mpDebug(): bool
     {
-        if (isset($_SERVER[\JellyTony\Observability\Constant\Constant::HTTP_MP_DEBUG]) || (bizCode()) > 1000) {
+        if (isset($_SERVER[Constant::HTTP_MP_DEBUG]) || (bizCode()) > 1000) {
             return true;
         }
 
@@ -68,7 +73,7 @@ if (!function_exists('mpDebug')) {
 if (!function_exists('bizCode')) {
     function bizCode(): int
     {
-        $bizCode = \JellyTony\Observability\Metadata\Metadata::get(\JellyTony\Observability\Constant\Constant::BIZ_CODE);
+        $bizCode = Metadata::get(Constant::BIZ_CODE);
         return $bizCode ? $bizCode : 1000;
     }
 }
@@ -76,21 +81,37 @@ if (!function_exists('bizCode')) {
 if (!function_exists('bizMsg')) {
     function bizMsg(): string
     {
-        $bizMsg = \JellyTony\Observability\Metadata\Metadata::get(\JellyTony\Observability\Constant\Constant::BIZ_MSG);
+        $bizMsg = Metadata::get(Constant::BIZ_MSG);
         return $bizMsg ? $bizMsg : 'ok';
     }
 }
 
 if (!function_exists('createFilterRequest')) {
-    function createFilterRequest(string $method, $uri, array $headers = [], $body = null, string $version = '1.1'): \JellyTony\Observability\Context\Request
+    function createFilterRequest(string $method, $uri, array $headers = [], $body = null, string $version = '1.1'): Request
     {
-        return new \JellyTony\Observability\Context\Request($method, $uri, $headers, $body, $version);
+        return new Request($method, $uri, $headers, $body, $version);
     }
 }
 
 if (!function_exists('filter')) {
     function filter($request, \Closure $finalHandler, array $middlewares = [], array $options = [])
     {
-        return \JellyTony\Observability\Filter\FilterPipeline::run($request, $finalHandler, $middlewares, $options);
+        return FilterPipeline::run($request, $finalHandler, $middlewares, $options);
+    }
+}
+
+// 保存异常错误信息
+if (!function_exists('saveError')) {
+    function saveError(\Exception $e)
+    {
+        \Log::error("Caught exception: " . $e->getCode() . "msg: " . $e->getMessage());
+
+        $bizCode = 1004;
+        if ($e->getCode() > 1000) {
+            $bizCode = $e->getCode();
+        }
+
+        Metadata::set(Constant::BIZ_CODE, $bizCode);
+        Metadata::set(Constant::BIZ_MSG, $e->getMessage());
     }
 }
