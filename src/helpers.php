@@ -110,6 +110,28 @@ if (!function_exists('bizMsg')) {
     }
 }
 
+if (!function_exists('getRequestId')) {
+    /**
+     * 获取请求ID
+     * @return string
+     */
+    function getRequestId(): string
+    {
+        return $_SERVER[Constant::HTTP_X_REQUEST_ID] ?? '';
+    }
+}
+
+if (!function_exists('getTraceId')) {
+    /**
+     * 获取traceId
+     * @return string
+     */
+    function getTraceId(): string
+    {
+        return $_SERVER[Constant::HTTP_X_B3_TRACE_ID] ?? '';
+    }
+}
+
 if (!function_exists('createFilterRequest')) {
     /**
      * 创建过滤器请求对象

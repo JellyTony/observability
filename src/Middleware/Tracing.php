@@ -28,7 +28,11 @@ class Tracing
      */
     private $config;
 
-    private $debug;
+    /**
+     * 感兴趣的请求，包含调试模式，和业务状态大于 1000 的请求
+     * @var bool
+     */
+    private $interested;
 
     private $prefix;
 
@@ -39,10 +43,10 @@ class Tracing
      */
     public function __construct(Tracer $tracer, Repository $config)
     {
-        $this->prefix = 'observability.middleware.trace.';
+        $this->prefix = 'observability.server.middleware.trace.';
         $this->tracer = $tracer;
         $this->config = $config;
-        $this->debug = $this->config->get('observability.middleware.debug');
+        $this->interested = false;
     }
 
     /**
@@ -55,7 +59,7 @@ class Tracing
     public function handle(Request $request, Closure $next)
     {
         // filter path exclude.
-        if ($this->shouldBeExcluded($request->path())) {
+        if ($this->shouldBeExcluded($request->path()) || $this->config->get($this->prefix . 'disabled')) {
             return $next($request);
         }
 
@@ -103,7 +107,7 @@ class Tracing
 
 
         if ($latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
-            $this->debug = true;
+            $this->interested = true;
         }
         if ($span->getContext()->isSampled() || $latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
             $span->getContext()->withSampled(true);
@@ -169,10 +173,10 @@ class Tracing
         $span->tag("http.method", $request->getMethod());
         $span->tag("http.url", $request->fullUrl());
         $span->tag('http.route', $request->path());
-        if ($this->debug) {
+        if ($this->interested) {
             $span->tag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
         }
-        if ($this->debug && in_array($request->headers->get('Content_Type'), $this->config->get($this->prefix . 'payload.content_types'))) {
+        if ($this->interested && in_array($request->headers->get('Content_Type'), $this->config->get($this->prefix . 'payload.content_types'))) {
             $span->tag('http.request.body', json_encode($this->filterInput($request->input())));
         }
     }
@@ -191,10 +195,10 @@ class Tracing
         }
 
         $span->tag('http.status_code', strval($response->getStatusCode()));
-        if ($this->debug) {
+        if ($this->interested) {
             $span->tag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
         }
-        if ($this->debug && in_array($response->headers->get('Content_Type'), $this->config->get($this->prefix . 'payload.content_types'))) {
+        if ($this->interested && in_array($response->headers->get('Content_Type'), $this->config->get($this->prefix . 'payload.content_types'))) {
             $data = $response->content();
             $span->tag('http.response.body', $data);
             $span->tag('http.response.size', strlen($data));
@@ -311,6 +315,7 @@ class Tracing
 
         return $input;
     }
+
 
     /**
      * @param $route

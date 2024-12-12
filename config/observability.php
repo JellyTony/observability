@@ -4,6 +4,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Service Name
+    |--------------------------------------------------------------------------
+    |
+    | Use this to lookup your application (microservice) on a tracing dashboard.
+    |
+    */
+
+    'service_name' => env('APP_NAME', 'microservice'),
+
+    'log_path' => env('LOG_PATH', storage_path("logs/lumen.log")),
+
+    /*
+    |--------------------------------------------------------------------------
     | Tracing Driver
     |--------------------------------------------------------------------------
     |
@@ -14,87 +27,7 @@ return [
     |
     */
 
-    'log_path' => env('LOG_PATH', storage_path("logs/lumen.log")),
-
     'driver' => env('TRACING_DRIVER', 'zipkin'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Service Name
-    |--------------------------------------------------------------------------
-    |
-    | Use this to lookup your application (microservice) on a tracing dashboard.
-    |
-    */
-
-    'service_name' => env('APP_NAME', 'microservice'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Middleware
-    |--------------------------------------------------------------------------
-    |
-    | Configure settings for tracing HTTP requests. You can exclude certain paths
-    | from tracing like '/horizon/api/*' (note that we can use wildcards), allow
-    | headers to be logged or hide values for ones that have sensitive info. It
-    | is also possible to specify content types for which you want to log
-    | request and response bodies.
-    |
-    */
-
-    'middleware' => [
-        'debug' => env('middleware.debug', false),
-
-        'request' => [
-            'disable' => env('middleware.request.disable', false),
-            'time_format' => env('middleware.request.time_format', 'Y-m-d H:i:s.u'),
-            'latency_threshold' => env('middleware.request.latency_threshold', 3000),
-            'dump_request_body' => env('middleware.request.dump_request_body', false),
-            'dump_request_headers' => env('middleware.request.dump_request_headers', false),
-            'dump_response_body' => env('middleware.request.dump_response_body', false),
-            'dump_response_headers' => env('middleware.request.dump_response_headers', false),
-        ],
-
-        'trace' => [
-            'disable' => env('middleware.trace.disable', false),
-            'latency_threshold' => env('middleware.trace.latency_threshold', 3000),
-
-            'excluded_paths' => [
-                //
-            ],
-
-            'allowed_headers' => [
-                '*'
-            ],
-
-            'sensitive_headers' => [
-                //
-            ],
-
-            'sensitive_input' => [
-                //
-            ],
-
-            'payload' => [
-                'content_types' => [
-                    'application/json',
-                ],
-            ],
-        ]
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Errors
-    |--------------------------------------------------------------------------
-    |
-    | Whether you want to automatically tag span with error=true
-    | to denote the operation represented by the Span has failed
-    | when error message was logged
-    |
-    */
-
-    'errors' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -118,6 +51,99 @@ return [
         'sampler_class' => \Zipkin\Samplers\BinarySampler::class,
         'percentage_sampler_rate' => env('zipkin.Rate', 1),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Middleware
+    |--------------------------------------------------------------------------
+    */
+
+    'middleware' => [
+        'server' => [
+            // Logging Middleware Configuration
+            'logging' => [
+                'disabled' => env('MIDDLEWARE_SERVER_LOGGING_DISABLED', false), // 是否禁用请求日志
+                'time_format' => env('MIDDLEWARE_SERVER_LOGGING_TIME_FORMAT', 'Y-m-d H:i:s'), // 时间格式
+                'latency_threshold' => env('MIDDLEWARE_SERVER_REQUEST_LATENCY_THRESHOLD', 3000), // 延迟阈值，默认为 3 秒
+                'access_level' => env('MIDDLEWARE_SERVER_LOGGING_ACCESS_LEVEL', 'info'), // 请求日志级别，默认为 info，分为 info 和 debug 两种
+                'excluded_paths' => env('MIDDLEWARE_SERVER_LOGGING_EXCLUDED_PATHS', []), // 不记录的请求路径
+                'request_body' => env('MIDDLEWARE_SERVER_LOGGING_REQUEST_BODY', false), // 是否记录请求参数
+                'request_body_max_size' => env('MIDDLEWARE_SERVER_LOGGING_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                'request_headers' => env('MIDDLEWARE_SERVER_LOGGING_REQUEST_HEADERS', false), // 是否记录请求头
+                'response_body' => env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_BODY', false), // 是否记录返回数据
+                'response_body_max_size' => env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                'response_headers' => env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_HEADERS', false), // 是否记录返回头
+                'allowed_headers' => env('MIDDLEWARE_SERVER_LOGGING_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
+                'sensitive_headers' => env('MIDDLEWARE_SERVER_LOGGING_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                'sensitive_input' => env('MIDDLEWARE_SERVER_LOGGING_SENSITIVE_INPUT', ['password']), // 敏感的输入
+            ],
+
+            // Trace Middleware Configuration
+            'trace' => [
+                'enabled' => env('MIDDLEWARE_SERVER_TRACE_ENABLED', true), // 是否启用 trace
+                'latency_threshold' => env('MIDDLEWARE_SERVER_TRACE_LATENCY_THRESHOLD', 3000),  // 延迟阈值, 默认为 3 秒
+                'excluded_paths' => env('MIDDLEWARE_SERVER_TRACE_EXCLUDED_PATHS', []), // 不记录的请求路径
+                'request_body' => env('MIDDLEWARE_SERVER_TRACE_REQUEST_BODY', false), // 是否记录请求参数
+                'request_body_max_size' => env('MIDDLEWARE_SERVER_TRACE_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                'request_headers' => env('MIDDLEWARE_SERVER_TRACE_REQUEST_HEADERS', false), // 是否记录请求头
+                'response_body' => env('MIDDLEWARE_SERVER_TRACE_RESPONSE_BODY', false), // 是否记录返回数据
+                'response_body_max_size' => env('MIDDLEWARE_SERVER_TRACE_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                'response_headers' => env('MIDDLEWARE_SERVER_TRACE_RESPONSE_HEADERS', false), // 是否记录返回头
+                'allowed_headers' => env('MIDDLEWARE_SERVER_TRACE_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
+                'sensitive_headers' => env('MIDDLEWARE_SERVER_TRACE_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                'sensitive_input' => env('MIDDLEWARE_SERVER_TRACE_SENSITIVE_INPUT', ['password']), // 敏感的输入
+            ],
+        ],
+
+        'client' => [
+            // Logging Middleware Configuration
+            'logging' => [
+                'disabled' => env('MIDDLEWARE_CLIENT_LOGGING_DISABLED', false), // 是否禁用请求日志
+                'time_format' => env('MIDDLEWARE_CLIENT_LOGGING_TIME_FORMAT', 'Y-m-d H:i:s'), // 时间格式
+                'latency_threshold' => env('MIDDLEWARE_CLIENT_REQUEST_LATENCY_THRESHOLD', 3000), // 延迟阈值，默认为 3 秒
+                'access_level' => env('MIDDLEWARE_CLIENT_LOGGING_ACCESS_LEVEL', 'info'), // 请求日志级别，默认为 info，分为 info 和 debug 两种
+                'excluded_paths' => env('MIDDLEWARE_CLIENT_LOGGING_EXCLUDED_PATHS', []), // 不记录的请求路径
+                'request_body' => env('MIDDLEWARE_CLIENT_LOGGING_REQUEST_BODY', false), // 是否记录请求参数
+                'request_body_max_size' => env('MIDDLEWARE_CLIENT_LOGGING_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                'request_headers' => env('MIDDLEWARE_CLIENT_LOGGING_REQUEST_HEADERS', false), // 是否记录请求头
+                'response_body' => env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_BODY', false), // 是否记录返回数据
+                'response_body_max_size' => env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                'response_headers' => env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_HEADERS', false), // 是否记录返回头
+                'allowed_headers' => env('MIDDLEWARE_CLIENT_LOGGING_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
+                'sensitive_headers' => env('MIDDLEWARE_CLIENT_LOGGING_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                'sensitive_input' => env('MIDDLEWARE_CLIENT_LOGGING_SENSITIVE_INPUT', ['password']), // 敏感的输入
+            ],
+
+            // Trace Middleware Configuration
+            'trace' => [
+                'enabled' => env('MIDDLEWARE_CLIENT_TRACE_ENABLED', true), // 是否启用 trace
+                'latency_threshold' => env('MIDDLEWARE_CLIENT_TRACE_LATENCY_THRESHOLD', 3000),  // 延迟阈值, 默认为 3 秒
+                'excluded_paths' => env('MIDDLEWARE_CLIENT_TRACE_EXCLUDED_PATHS', []), // 不记录的请求路径
+                'request_body' => env('MIDDLEWARE_CLIENT_TRACE_REQUEST_BODY', false), // 是否记录请求参数
+                'request_body_max_size' => env('MIDDLEWARE_CLIENT_TRACE_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                'request_headers' => env('MIDDLEWARE_CLIENT_TRACE_REQUEST_HEADERS', false), // 是否记录请求头
+                'response_body' => env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_BODY', false), // 是否记录返回数据
+                'response_body_max_size' => env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                'response_headers' => env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_HEADERS', false), // 是否记录返回头
+                'allowed_headers' => env('MIDDLEWARE_CLIENT_TRACE_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
+                'sensitive_headers' => env('MIDDLEWARE_CLIENT_TRACE_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                'sensitive_input' => env('MIDDLEWARE_CLIENT_TRACE_SENSITIVE_INPUT', ['password']), // 敏感的输入
+            ],
+        ]
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Errors
+    |--------------------------------------------------------------------------
+    |
+    | Whether you want to automatically tag span with error=true
+    | to denote the operation represented by the Span has failed
+    | when error message was logged
+    |
+    */
+
+    'errors' => true,
 
 
 ];
