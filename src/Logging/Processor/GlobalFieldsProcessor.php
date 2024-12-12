@@ -22,12 +22,9 @@ class GlobalFieldsProcessor implements LogProcessor
 
             // 删除 'global_fields' 字段
             unset($context['global_fields']);
-        }
-
-        // 如果 'context' 中有其他数据，则保留并更新
-        if (!empty($context)) {
             $record->set('context', $context);
         }
+
 
         return $record;
     }

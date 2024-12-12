@@ -17,7 +17,6 @@ class MetadataTest  extends TestCase
     {
         Metadata::set('key1', 'value1');
         Metadata::set('key1', 'value2');
-
         $this->assertEquals(['value1', 'value2'], Metadata::values('key1'));
         $this->assertEquals('value1', Metadata::get('key1'));
     }
