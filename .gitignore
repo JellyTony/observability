@@ -1,0 +1,16 @@
+/vendor
+/.idea
+Homestead.json
+Homestead.yaml
+.env
+.DS_Store
+*.swap
+*.swp
+*.tree
+*.un~
+user_http_server.pid
+.env_bak
+_ide_helper.php
+.devcontainer/
+.vscode/launch.json
+.phpstorm.meta.php
