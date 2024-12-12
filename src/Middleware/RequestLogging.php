@@ -62,7 +62,7 @@ class RequestLogging
             'biz_msg' => bizMsg()
         ];
 
-        if ($latency > $this->config->get($this->prefix . 'latency_threshold') || mpDebug()) {
+        if ($latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
             $this->debug = true;
         }
 

@@ -42,7 +42,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "JellyTony\\Observability\\TracingServiceProvider"
+        "ObservabilityServiceProvider"
       ]
     }
   },

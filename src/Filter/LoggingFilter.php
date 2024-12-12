@@ -26,7 +26,7 @@ class LoggingFilter implements Filter
             return $reply;
         } catch (\Exception $e) {
             $endTime = microtime(true);
-            list($bizCode, $bizMsg) = convertExceptionBizError($e);
+            list($bizCode, $bizMsg) = convertExceptionToBizError($e);
             $context->setBizResult($bizCode, $bizMsg);
             $this->terminate($context, $startTime, $endTime);
             throw $e;
@@ -57,7 +57,7 @@ class LoggingFilter implements Filter
             "target_service" => getServiceName($service),
         ];
 
-        if ($context->isError() || mpDebug() || $latency > $this->slowThreshold) {
+        if ($context->isError() || isMpDebug() || $latency > $this->slowThreshold) {
             $fields['biz_code'] = $context->getBizCode();
             $fields['biz_msg'] = $context->getBizCode();
             $fields['req_body'] = $context->getRequest()->getBody();

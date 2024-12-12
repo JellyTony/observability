@@ -102,10 +102,10 @@ class Tracing
         $latency = round($duration, 2);
 
 
-        if ($latency > $this->config->get($this->prefix . 'latency_threshold') || mpDebug()) {
+        if ($latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
             $this->debug = true;
         }
-        if ($span->getContext()->isSampled() || $latency > $this->config->get($this->prefix . 'latency_threshold') || mpDebug()) {
+        if ($span->getContext()->isSampled() || $latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
             $span->getContext()->withSampled(true);
         }
 

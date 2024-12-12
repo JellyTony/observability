@@ -42,6 +42,8 @@ class TraceFilter implements Filter
             $this->terminate($context, $span);
             return $response;
         } catch (\Exception $e) {
+            list($bizCode, $bizMsg) = convertExceptionToBizError($e);
+            $context->setBizResult($bizCode, $bizMsg);
             $this->terminate($context, $span);
             // 继续抛出异常
             throw $e;

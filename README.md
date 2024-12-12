@@ -22,7 +22,7 @@ composer require jellytony/observability
    在 Laravel 项目的 `config/app.php` 文件的 `providers` 数组中，添加 `TracingServiceProvider` 和 `LogServiceProvider`：
 
    ```php
-   JellyTony\Observability\TracingServiceProvider::class,
+   JellyTony\Observability\ObservabilityServiceProvider::class,
    ```
 
    在 Lumen 项目中，在 `bootstrap/app.php` 文件中，添加 `TracingServiceProvider` 和 `LogServiceProvider`：
