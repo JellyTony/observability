@@ -80,9 +80,9 @@ class TraceRequests
 
         // 处理响应，添加 trace_id 和 biz_code 信息
         $responseData = $reply->getData(true);
-        if (!empty($traceId) && !empty($reply) && !empty($responseData)) {
-            $responseData[Constant::TRACE_ID] = $traceId;
-            Metadata::set(Constant::TRACE_ID, $traceId);
+        if (!empty($traceID) && !empty($reply) && !empty($responseData)) {
+            $responseData[Constant::TRACE_ID] = $traceID;
+            Metadata::set(Constant::TRACE_ID, $traceID);
             $reply->setData($responseData);
         }
         if (!empty($reply) && !empty($responseData) && !empty($responseData['code'])) {
