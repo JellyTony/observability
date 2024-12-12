@@ -16,7 +16,7 @@ use JellyTony\Observability\Contracts\Tracer;
 use Illuminate\Contracts\Config\Repository;
 use Symfony\Component\HttpFoundation\HeaderBag;
 
-class TraceRequests
+class Tracing
 {
     /**
      * @var Tracer

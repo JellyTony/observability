@@ -4,7 +4,8 @@
 
 ## 项目简介
 
-`jellytony/observability` 是一个为 Laravel 框架提供的分布式可观测性工具。它支持 Zipkin 和 Jaeger 等追踪系统，通过集成追踪功能，可以帮助你在分布式应用中进行请求跟踪、性能监控、日志聚合等操作。
+`jellytony/observability` 是一个为 Laravel 框架提供的分布式可观测性工具。它支持 Zipkin 和 Jaeger
+等追踪系统，通过集成追踪功能，可以帮助你在分布式应用中进行请求跟踪、性能监控、日志聚合等操作。
 
 ## 安装与配置
 
@@ -25,7 +26,7 @@ composer require jellytony/observability
    ```php
    JellyTony\Observability\TracingServiceProvider::class,
    ```
-  
+
    在 Lumen 项目中，在 `bootstrap/app.php` 文件中，添加 `TracingServiceProvider` 和 `LogServiceProvider`：
 
 2. **配置文件**
@@ -169,6 +170,7 @@ composer require jellytony/observability
 在 Laravel 中，追踪功能会自动处理 HTTP 请求和响应的追踪。你只需要确保 `TracingServiceProvider` 已正确注册，系统会自动捕获每个请求的信息。
 
 ### 启动日志注入 trace 信息
+
 在 Laravel 中，你可以使用 `LogServiceProvider` 启用日志注入 trace 信息。
 
 ### 自定义中间件
@@ -183,24 +185,27 @@ composer require jellytony/observability
 
 ```php
 protected $middleware = [
-    \JellyTony\Observability\Middleware\TraceRequests::class,
-    \JellyTony\Observability\Middleware\RequestIdMiddleware::class,
-    \JellyTony\Observability\Middleware\RequestLog::class,
+    \JellyTony\Observability\Middleware\RequestID::class,
+    \JellyTony\Observability\Middleware\ExceptionCapture::class
+    \JellyTony\Observability\Middleware\Tracing::class,
+    \JellyTony\Observability\Middleware\RequestLogging::class,
 ];
 ```
 
 在 Lumen 中，你可以在 `bootstrap/app.php` 中启用：
+
 ```php
-    'request_id' => JellyTony\Observability\Middleware\RequestIdMiddleware::class,
-    'zipkin' => JellyTony\Observability\Middleware\TraceRequests::class,
-    'request_log' => JellyTony\Observability\Middleware\RequestLog::class,
+    'request_id' => JellyTony\Observability\Middleware\RequestID::class,
+    'exception_capture' =>\JellyTony\Observability\Middleware\ExceptionCapture::class 
+    'tracing' => JellyTony\Observability\Middleware\Tracing::class,
+    'request_log' => JellyTony\Observability\Middleware\RequestLogging::class,
 ```
 
 然后在 `routes/web.php` 路由中添加路由，例如：
 
 ```php
 <?php
-$app->group(['middleware' => ['request_id','zipkin','request_id']], function (
+$app->group(['middleware' => ['request_id','exception_capture','zipkin','request_id']], function (
     $app->get('/', function () {
         return $app->version();
     })
@@ -214,9 +219,20 @@ $app->group(['middleware' => ['request_id','zipkin','request_id']], function (
 ```php
 use JellyTony\Observability\Facades\Trace;
 
-Trace::startSpan('span_name');
-// 执行代码
-Trace::endSpan();
+$carrier = array_map(function ($header) {
+   if ($header[0] == "") {
+       return null;
+   }
+   return $header[0];
+}, $request->headers->all());
+
+// 提取请求头到 carrier ，做服务链路关联
+$extractor = $this->tracer->getPropagation()->getExtractor(new Map());
+$extractedContext = $extractor($carrier);
+$spanName = sprintf("HTTP Server %s: %s", $request->method(), $request->path());
+
+// 生成 span信息
+$span = $this->tracer->startSpan($spanName, $extractedContext);
 ```
 
 ## 测试

@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Config\Repository;
 
-class RequestLog
+class RequestLogging
 {
     /**
      * @var Repository

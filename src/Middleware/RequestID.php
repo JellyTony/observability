@@ -3,11 +3,11 @@
 namespace JellyTony\Observability\Middleware;
 
 use Closure;
-use JellyTony\Observability\Constant\Constant;
 use Zipkin\Propagation\Id;
 use Illuminate\Http\Request;
+use JellyTony\Observability\Constant\Constant;
 
-class RequestIdMiddleware
+class RequestID
 {
     public function handle(Request $request, Closure $next)
     {
