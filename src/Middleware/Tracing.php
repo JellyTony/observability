@@ -77,19 +77,24 @@ class Tracing
         $this->tagRequestData($span, $request);
 
         $reply = $next($request);
+        if (!empty($reply) && $reply instanceof JsonResponse) {
+            // 获取 JSON 响应的数据
+            $responseData = $reply->getData(true);  // 将数据获取为数组
 
-        // 处理响应，添加 trace_id 和 biz_code 信息
-        $responseData = $reply->getData(true);
-        if (!empty($traceID) && !empty($reply) && !empty($responseData)) {
-            $responseData[Constant::TRACE_ID] = $traceID;
-            Metadata::set(Constant::TRACE_ID, $traceID);
-            $reply->setData($responseData);
-        }
-        if (!empty($reply) && !empty($responseData) && !empty($responseData['code'])) {
-            Metadata::set(Constant::BIZ_CODE, $responseData['code']);
-        }
-        if (!empty($reply) && !empty($responseData) && !empty($responseData['msg'])) {
-            Metadata::set(Constant::BIZ_MSG, $responseData['msg']);
+            // 添加 trace_id 和 biz_code 到响应数据
+            if (!empty($traceID) && !empty($responseData)) {
+                $responseData[Constant::TRACE_ID] = $traceID;
+                Metadata::set(Constant::TRACE_ID, $traceID);
+                $reply->setData($responseData);  // 将修改后的数据重新设置到响应中
+            }
+
+            // 设置 biz_code 和 biz_msg（如果响应数据中包含这些字段）
+            if (!empty($responseData['code'])) {
+                Metadata::set(Constant::BIZ_CODE, $responseData['code']);
+            }
+            if (!empty($responseData['msg'])) {
+                Metadata::set(Constant::BIZ_MSG, $responseData['msg']);
+            }
         }
 
         $endTime = microtime(true);
