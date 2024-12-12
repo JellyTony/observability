@@ -106,7 +106,20 @@ class Tracing
 
         $this->terminate($request, $reply);
 
+        $this->finishRootSpan();
+
         return $reply;
+    }
+
+    /**
+     * 结束根跨度并清理
+     */
+    protected function finishRootSpan()
+    {
+        if ($this->tracer->getRootSpan() !== null) {
+            $this->tracer->getRootSpan()->finish();
+            $this->tracer->flush();
+        }
     }
 
     /**
