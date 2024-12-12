@@ -9,10 +9,6 @@ class FieldCleanupProcessor implements LogProcessor
 {
     public function process(LogRecord $record): LogRecord
     {
-        if (!empty($record['message'])) {
-            $record['msg'] = $record['message'];
-            unset($record['message']);
-        }
         if ($record->has('message')) {
             $record->set('msg', $record->get('message'));
             $record->delete('message');

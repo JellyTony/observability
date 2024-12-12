@@ -9,11 +9,11 @@ class ServiceInfoProcessor implements LogProcessor
 {
     public function process(LogRecord $record): LogRecord
     {
-        $record['app_id'] = env('APP_ID', 1000);
-        $record['app_name'] = env('APP_NAME', 'microservice');
-        $record['app_version'] = env('APP_VERSION', '1.0.0');
-        $record['deploy_env'] = env('APP_DEPLOY_ENV', 'test');
-
+        $record->set('app_id', env('APP_ID', 1000));
+        $record->set('app_name', env('APP_NAME', 'microservice'));
+        $record->set('app_version', env('APP_VERSION', '1.0.0'));
+        $record->set('deploy_env', env('APP_DEPLOY_ENV', 'test'));
+        
         return $record;
     }
 }
