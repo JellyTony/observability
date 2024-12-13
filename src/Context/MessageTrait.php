@@ -30,6 +30,16 @@ trait MessageTrait
         return $this->body;
     }
 
+    public function getData(): array
+    {
+        if (is_array($this->body)) {
+            return $this->body;
+        }
+
+        // 尝试将字符串转换为数组
+        return json_decode($this->body, true);
+    }
+
     public function getBodySize(): int
     {
         if (empty($this->bodySize)) {
@@ -77,9 +87,10 @@ trait MessageTrait
 
     public function setBody($body): void
     {
-        $this->body = $body;
-        if (is_array($this->body) || is_object($this->body)) {
-            $this->body = json_encode($this->body, true); // 将数组转换为字符串
+        if (is_array($body) || is_object($body)) {
+            $this->body = json_encode($body, JSON_UNESCAPED_UNICODE);
+        } else {
+            $this->body = (string)$body;
         }
 
         $this->bodySize = strlen($this->body);

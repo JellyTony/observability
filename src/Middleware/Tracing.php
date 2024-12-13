@@ -43,10 +43,20 @@ class Tracing
      */
     public function __construct(Tracer $tracer, Repository $config)
     {
-        $this->prefix = 'observability.server.middleware.trace.';
+        $this->prefix = 'observability.middleware.server.trace.';
         $this->tracer = $tracer;
         $this->config = $config;
         $this->interested = false;
+    }
+
+    /**
+     * @param $key
+     * @param $default
+     * @return void
+     */
+    public function config($key = null, $default = null)
+    {
+        return config($this->prefix . $key, $default);
     }
 
     /**
@@ -59,7 +69,7 @@ class Tracing
     public function handle(Request $request, Closure $next)
     {
         // filter path exclude.
-        if ($this->shouldBeExcluded($request->path()) || $this->config->get($this->prefix . 'disabled')) {
+        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled')) {
             return $next($request);
         }
 
@@ -107,10 +117,10 @@ class Tracing
 
 
         // 慢请求、或者特定标识的请求
-        if ($latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
+        if ($latency > $this->config('latency_threshold') || isMpDebug()) {
             $this->interested = true;
         }
-        if ($span->getContext()->isSampled() || $latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
+        if ($span->getContext()->isSampled() || $latency > $this->config('latency_threshold') || isMpDebug()) {
             $span->getContext()->withSampled(true);
         }
 
@@ -192,26 +202,26 @@ class Tracing
         $span->tag('http.status_code', strval($response->getStatusCode()));
 
         // 上报请求头
-        if ($this->interested || $this->config->get($this->prefix . 'request_headers')) {
+        if ($this->interested || $this->config('request_headers')) {
             $span->tag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
         }
         // 上报响应头
-        if ($this->interested || $this->config->get($this->prefix . 'response_headers')) {
+        if ($this->interested || $this->config('response_headers')) {
             $span->tag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
         }
-
-        if ($this->interested || $this->config->get($this->prefix . 'request_body')) {
-            $maxSize = $this->config->get('request_body_max_size', 0);
+        // 上报请求请求
+        if ($this->interested || $this->config('request_body')) {
+            $maxSize = $this->config('request_body_max_size', 0);
             $bodySize = strlen($request->getContent());
             if ($maxSize > 0 && $bodySize <= $maxSize) {
                 $span->tag('http.request.size', $bodySize);
                 $span->tag('http.request.body', json_encode($this->filterInput($request->input())));
             }
         }
-
-        if ($this->interested && $this->config->get($this->prefix . 'response_body') && $response instanceof JsonResponse && $data = $response->content()) {
+        // 上报响应数据
+        if (($this->interested || $this->config('response_body')) && $response instanceof JsonResponse && $data = $response->content()) {
             $replySize = strlen($data);
-            $maxSize = $this->config->get('response_body_max_size', 0);
+            $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $replySize <= $maxSize) {
                 $span->tag('http.response.size', $replySize);
                 $span->tag('http.response.body', $data);
@@ -225,7 +235,7 @@ class Tracing
      */
     protected function shouldBeExcluded(string $path): bool
     {
-        foreach ($this->config->get($this->prefix . 'excluded_paths') as $excludedPath) {
+        foreach ($this->config('excluded_paths') as $excludedPath) {
             if (Str::is($excludedPath, $path)) {
                 return true;
             }
@@ -249,7 +259,7 @@ class Tracing
      */
     protected function filterAllowedHeaders(Collection $headers): Collection
     {
-        $allowedHeaders = $this->config->get($this->prefix . 'allowed_headers');
+        $allowedHeaders = $this->config('allowed_headers');
 
         if (in_array('*', $allowedHeaders)) {
             return $headers;
@@ -264,7 +274,7 @@ class Tracing
 
     protected function hideSensitiveHeaders(Collection $headers): Collection
     {
-        $sensitiveHeaders = $this->config->get($this->prefix . 'sensitive_headers');
+        $sensitiveHeaders = $this->config('sensitive_headers');
 
         $normalizedHeaders = array_map('strtolower', $sensitiveHeaders);
 
@@ -317,7 +327,7 @@ class Tracing
      */
     protected function hideSensitiveInput(Collection $input): Collection
     {
-        $sensitiveInput = $this->config->get($this->prefix . 'sensitive_input');
+        $sensitiveInput = $this->config('sensitive_input');
 
         $normalizedInput = array_map('strtolower', $sensitiveInput);
 

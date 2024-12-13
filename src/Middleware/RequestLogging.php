@@ -35,10 +35,20 @@ class RequestLogging
         $this->config = $config;
         $this->interested = false;
         $this->headerFilter = new HeaderFilter([
-            'allowed_headers' => $this->config->get($this->prefix . 'allowed_headers'), // 允许的头部
-            'sensitive_headers' => $this->config->get($this->prefix . 'sensitive_headers'), // 敏感的头部
-            'sensitive_input' => $this->config->get($this->prefix . 'sensitive_input'),  // 敏感的输入
+            'allowed_headers' => $this->config('allowed_headers'), // 允许的头部
+            'sensitive_headers' => $this->config('sensitive_headers'), // 敏感的头部
+            'sensitive_input' => $this->config('sensitive_input'),  // 敏感的输入
         ]);
+    }
+
+    /**
+     * @param $key
+     * @param $default
+     * @return void
+     */
+    public function config($key = null, $default = null)
+    {
+        return config($this->prefix . $key, $default);
     }
 
     /**
@@ -47,7 +57,7 @@ class RequestLogging
      */
     protected function shouldBeExcluded(string $path): bool
     {
-        foreach ($this->config->get($this->prefix . 'excluded_paths') as $excludedPath) {
+        foreach ($this->config('excluded_paths') as $excludedPath) {
             if (Str::is($excludedPath, $path)) {
                 return true;
             }
@@ -59,7 +69,7 @@ class RequestLogging
     public function handle(Request $request, Closure $next)
     {
         // filter path exclude.
-        if ($this->shouldBeExcluded($request->path()) || $this->config->get($this->prefix . 'disabled')) {
+        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled')) {
             return $next($request);
         }
 
@@ -76,7 +86,7 @@ class RequestLogging
         $latency = round($duration, 2);
 
         $fields = [
-            'start' => date($this->config->get($this->prefix . 'time_format'), (int)$startTime),
+            'start' => date($this->config('time_format'), (int)$startTime),
             'url' => $request->fullUrl(),
             'method' => $request->method(),
             'user_agent' => $request->userAgent(),
@@ -91,22 +101,22 @@ class RequestLogging
             'biz_msg' => bizMsg()
         ];
 
-        if ($latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
+        if ($latency > $this->config('latency_threshold') || isMpDebug()) {
             $this->interested = true;
         }
 
         // 打印请求头
-        if ($this->interested || $this->config->get($this->prefix . 'request_headers')) {
+        if ($this->interested || $this->config('request_headers')) {
             $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
         }
         // 打印响应头
-        if (($this->interested || $this->config->get($this->prefix . 'response_headers')) && !empty($response->headers->all())) {
+        if (($this->interested || $this->config('response_headers')) && !empty($response->headers->all())) {
             $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($response->headers->all()));
         }
 
         // 打印请求数据
-        if (($this->interested || $this->config->get($this->prefix . 'request_body')) && !empty($request->getContent())) {
-            $maxSize = $this->config->get('request_body_max_size', 0);
+        if (($this->interested || $this->config('request_body')) && !empty($request->getContent())) {
+            $maxSize = $this->config('request_body_max_size', 0);
             $bodySize = strlen($request->getContent());
             if ($maxSize > 0 && $bodySize <= $maxSize) {
                 $fields['req_size'] = $bodySize;
@@ -115,9 +125,9 @@ class RequestLogging
         }
 
         // 打印响应数据
-        if (($this->interested || $this->config->get($this->prefix . 'response_body')) && !empty($reply) && $reply instanceof JsonResponse) {
+        if (($this->interested || $this->config('response_body')) && !empty($reply) && $reply instanceof JsonResponse) {
             $responseData = $reply->getData(true);  // 将数据获取为数组
-            $maxSize = $this->config->get('response_body_max_size', 0);
+            $maxSize = $this->config('response_body_max_size', 0);
             $replySize = strlen($response->content());
             if (!empty($responseData) && $maxSize > 0 && $replySize <= $maxSize) {
                 $fields['reply_size'] = $replySize;
@@ -126,7 +136,7 @@ class RequestLogging
         }
 
         // 根据慢日志阈值和错误情况记录日志
-        if ($latency > $this->config->get($this->prefix . 'latency_threshold')) {
+        if ($latency > $this->config('latency_threshold')) {
             if (isset($fields['error'])) {
                 \Log::error('http server slow', ['global_fields' => $fields]);
             } else {
@@ -135,7 +145,7 @@ class RequestLogging
         } elseif (isset($fields['error'])) {
             \Log::error('http server', ['global_fields' => $fields]);
         } else {
-            if ($this->config->get('access_level') == 'info') {
+            if ($this->interested || $this->config('access_level') == 'info') {
                 \Log::info('http server', ['global_fields' => $fields]);
             } else {
                 \Log::debug('http server', ['global_fields' => $fields]);

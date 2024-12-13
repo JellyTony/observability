@@ -80,7 +80,7 @@ return [
 
             // Trace Middleware Configuration
             'trace' => [
-                'enabled' => env('MIDDLEWARE_SERVER_TRACE_ENABLED', true), // 是否启用 trace
+                'disabled' => env('MIDDLEWARE_SERVER_TRACE_DISABLED', false), // 是否禁用
                 'latency_threshold' => env('MIDDLEWARE_SERVER_TRACE_LATENCY_THRESHOLD', 3000),  // 延迟阈值, 默认为 3 秒
                 'excluded_paths' => env('MIDDLEWARE_SERVER_TRACE_EXCLUDED_PATHS', []), // 不记录的请求路径
                 'request_body' => env('MIDDLEWARE_SERVER_TRACE_REQUEST_BODY', false), // 是否记录请求参数
@@ -116,7 +116,7 @@ return [
 
             // Trace Middleware Configuration
             'trace' => [
-                'enabled' => env('MIDDLEWARE_CLIENT_TRACE_ENABLED', true), // 是否启用 trace
+                'disabled' => env('MIDDLEWARE_CLIENT_TRACE_DISABLED', false), // 是否禁用
                 'latency_threshold' => env('MIDDLEWARE_CLIENT_TRACE_LATENCY_THRESHOLD', 3000),  // 延迟阈值, 默认为 3 秒
                 'excluded_paths' => env('MIDDLEWARE_CLIENT_TRACE_EXCLUDED_PATHS', []), // 不记录的请求路径
                 'request_body' => env('MIDDLEWARE_CLIENT_TRACE_REQUEST_BODY', false), // 是否记录请求参数
