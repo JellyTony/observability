@@ -45,10 +45,10 @@ class FilterPipeline
         $pipeline = new self($finalHandler);
         if (empty($middlewares)) {
             $middlewares = [
-                \JellyTony\Observability\Filter\DefaultFilter::class,
-                \JellyTony\Observability\Filter\Metadata::class,
-                \JellyTony\Observability\Filter\TraceFilter::class,
-                \JellyTony\Observability\Filter\LoggingFilter::class,
+                DefaultFilter::class,
+                Metadata::class,
+                TraceFilter::class,
+                LoggingFilter::class,
             ];
         }
 

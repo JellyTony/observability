@@ -8,8 +8,19 @@ use JellyTony\Observability\Contracts\Context;
 
 class LoggingFilter implements Filter
 {
+    /**
+     * 感兴趣的请求，包含调试模式，和业务状态大于 1000 的请求
+     * @var bool
+     */
+    private $interested;
+
     protected $timeFormat = 'Y-m-d H:i:s.u';
     protected $slowThreshold = 500; // 默认慢日志时间（毫秒）
+
+    public function __construct()
+    {
+
+    }
 
     public function handle(Context $context, Closure $next, array $options = [])
     {
