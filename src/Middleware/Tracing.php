@@ -43,7 +43,7 @@ class Tracing
      */
     public function __construct(Tracer $tracer, Repository $config)
     {
-        $this->prefix = 'observability.server.middleware.trace.';
+        $this->prefix = 'observability.middleware.server.trace.';
         $this->tracer = $tracer;
         $this->config = $config;
         $this->interested = false;
