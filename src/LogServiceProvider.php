@@ -30,7 +30,6 @@ class LogServiceProvider extends ServiceProvider
         $pipeline = new LogPipeline();
         $handler->pushProcessor(function ($record) use ($pipeline) {
             $logRecord = new LogRecord($record); // 将原始日志记录转换为 LogRecord 对象
-            // 使用流水线处理日志
             $processedRecord = $pipeline->process($logRecord);
             $newRecord = $processedRecord->all();
             if (!empty($newRecord)) {
