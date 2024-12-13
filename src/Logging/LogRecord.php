@@ -81,9 +81,7 @@ class LogRecord implements API
     public function delete(string $key)
     {
         if (!strpos($key, '.')) {
-            if (!empty($this->data[$key])) {
-                unset($this->data[$key]);
-            }
+            unset($this->data[$key]);
         }
 
         $depth = 0;

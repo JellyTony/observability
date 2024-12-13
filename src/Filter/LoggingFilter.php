@@ -110,7 +110,7 @@ class LoggingFilter implements Filter
             'latency' => $latency,
             "target_service" => getServiceName($service),
             "biz_code" => $context->getBizCode(),
-            "biz_msg" => $context - getBizMsg()
+            "biz_msg" => $context->getBizMsg()
         ];
 
         // 打印请求头

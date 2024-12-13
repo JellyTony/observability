@@ -24,8 +24,8 @@ class LogPipeline
                 new TimestampProcessor(),
                 new GlobalFieldsProcessor(),
                 new LogLevelProcessor(),
-                new FieldCleanupProcessor(),
                 new ServiceInfoProcessor(),
+                new FieldCleanupProcessor(),
             ];
         }
         $this->processors = $processors;
