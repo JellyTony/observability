@@ -13,7 +13,9 @@ class DefaultFilter implements Filter
 
     public function handle(Context $context, Closure $next, array $options = [])
     {
-        $headers = [];
+        $headers = [
+            'x-md-local-caller_service' => appName(),
+        ];
         if (isset($_SERVER[Constant::HTTP_X_REQUEST_ID])) {
             $headers['X-Request-Id'] = $_SERVER[Constant::HTTP_X_REQUEST_ID];
         }
@@ -23,6 +25,7 @@ class DefaultFilter implements Filter
         if (isset($_SERVER[Constant::HTTP_MP_DEBUG])) {
             $headers['Mp-Debug'] = '1';
         }
+
         $context->getRequest()->setHeaders($headers);
 
         try {

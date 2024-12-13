@@ -3,7 +3,6 @@
 namespace JellyTony\Observability\Filter;
 
 use Closure;
-use JellyTony\Observability\Constant\Constant;
 use JellyTony\Observability\Contracts\Filter;
 use JellyTony\Observability\Contracts\Context;
 

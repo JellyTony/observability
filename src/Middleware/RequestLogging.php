@@ -87,7 +87,6 @@ class RequestLogging
             'caller_service' => $request->header('x-md-local-caller_service', 'unknown'),
             'latency' => $latency,
             'http_status' => $response->status(),
-            'http_size' => strlen($response->getContent()),
             'biz_code' => bizCode(),
             'biz_msg' => bizMsg()
         ];
@@ -96,29 +95,35 @@ class RequestLogging
             $this->interested = true;
         }
 
-        // 判断是否需要打印请求参数和返回数据
+        // 打印请求头
         if ($this->interested || $this->config->get($this->prefix . 'request_headers')) {
             $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
         }
-        if ($this->interested || $this->config->get($this->prefix . 'request_body')) {
-            $maxSize = $this->config->get('request_body_max_size', 0);
-            if ($maxSize > 0 && strlen($request->getContent()) <= $maxSize) {
-                $fields['req_body'] = json_encode($this->headerFilter->filterInput($request->input()));
-            }
-        }
+        // 打印响应头
         if (($this->interested || $this->config->get($this->prefix . 'response_headers')) && !empty($response->headers->all())) {
             $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($response->headers->all()));
         }
 
-        // 获取 JSON 响应的数据
-        if (!empty($reply) && $reply instanceof JsonResponse) {
-            $responseData = $reply->getData(true);  // 将数据获取为数组
-            $maxSize = $this->config->get('response_body_max_size', 0);
-            if (($this->interested || $this->config->get($this->prefix . 'response_body')) && !empty($responseData) && $maxSize > 0 && strlen($response->content()) <= $maxSize) {
-                $fields['reply_body'] = $responseData;
+        // 打印请求数据
+        if (($this->interested || $this->config->get($this->prefix . 'request_body')) && !empty($request->getContent())) {
+            $maxSize = $this->config->get('request_body_max_size', 0);
+            $bodySize = strlen($request->getContent());
+            if ($maxSize > 0 && $bodySize <= $maxSize) {
+                $fields['req_size'] = $bodySize;
+                $fields['req_body'] = json_encode($this->headerFilter->filterInput($request->input()));
             }
         }
 
+        // 打印响应数据
+        if (($this->interested || $this->config->get($this->prefix . 'response_body')) && !empty($reply) && $reply instanceof JsonResponse) {
+            $responseData = $reply->getData(true);  // 将数据获取为数组
+            $maxSize = $this->config->get('response_body_max_size', 0);
+            $replySize = strlen($response->content());
+            if (!empty($responseData) && $maxSize > 0 && $replySize <= $maxSize) {
+                $fields['reply_size'] = $replySize;
+                $fields['reply_body'] = $responseData;
+            }
+        }
 
         // 根据慢日志阈值和错误情况记录日志
         if ($latency > $this->config->get($this->prefix . 'latency_threshold')) {

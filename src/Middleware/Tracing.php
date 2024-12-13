@@ -3,8 +3,6 @@
 namespace JellyTony\Observability\Middleware;
 
 use Closure;
-use JellyTony\Observability\Constant\Constant;
-use JellyTony\Observability\Metadata\Metadata;
 use Zipkin\Propagation\Map;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -12,8 +10,10 @@ use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use JellyTony\Observability\Contracts\Span;
-use JellyTony\Observability\Contracts\Tracer;
 use Illuminate\Contracts\Config\Repository;
+use JellyTony\Observability\Contracts\Tracer;
+use JellyTony\Observability\Metadata\Metadata;
+use JellyTony\Observability\Constant\Constant;
 use Symfony\Component\HttpFoundation\HeaderBag;
 
 class Tracing
@@ -106,6 +106,7 @@ class Tracing
         $latency = round($duration, 2);
 
 
+        // 慢请求、或者特定标识的请求
         if ($latency > $this->config->get($this->prefix . 'latency_threshold') || isMpDebug()) {
             $this->interested = true;
         }
@@ -173,12 +174,6 @@ class Tracing
         $span->tag("http.method", $request->getMethod());
         $span->tag("http.url", $request->fullUrl());
         $span->tag('http.route', $request->path());
-        if ($this->interested) {
-            $span->tag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
-        }
-        if ($this->interested && in_array($request->headers->get('Content_Type'), $this->config->get($this->prefix . 'payload.content_types'))) {
-            $span->tag('http.request.body', json_encode($this->filterInput($request->input())));
-        }
     }
 
     /**
@@ -195,13 +190,32 @@ class Tracing
         }
 
         $span->tag('http.status_code', strval($response->getStatusCode()));
-        if ($this->interested) {
+
+        // 上报请求头
+        if ($this->interested || $this->config->get($this->prefix . 'request_headers')) {
+            $span->tag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
+        }
+        // 上报响应头
+        if ($this->interested || $this->config->get($this->prefix . 'response_headers')) {
             $span->tag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
         }
-        if ($this->interested && in_array($response->headers->get('Content_Type'), $this->config->get($this->prefix . 'payload.content_types'))) {
-            $data = $response->content();
-            $span->tag('http.response.body', $data);
-            $span->tag('http.response.size', strlen($data));
+
+        if ($this->interested || $this->config->get($this->prefix . 'request_body')) {
+            $maxSize = $this->config->get('request_body_max_size', 0);
+            $bodySize = strlen($request->getContent());
+            if ($maxSize > 0 && $bodySize <= $maxSize) {
+                $span->tag('http.request.size', $bodySize);
+                $span->tag('http.request.body', json_encode($this->filterInput($request->input())));
+            }
+        }
+
+        if ($this->interested && $this->config->get($this->prefix . 'response_body') && $response instanceof JsonResponse && $data = $response->content()) {
+            $replySize = strlen($data);
+            $maxSize = $this->config->get('response_body_max_size', 0);
+            if ($maxSize > 0 && $replySize <= $maxSize) {
+                $span->tag('http.response.size', $replySize);
+                $span->tag('http.response.body', $data);
+            }
         }
     }
 
