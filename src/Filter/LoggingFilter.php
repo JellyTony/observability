@@ -110,7 +110,7 @@ class LoggingFilter implements Filter
             'latency' => $latency,
             "target_service" => getServiceName($service),
             "biz_code" => $context->getBizCode(),
-            "biz_msg" => $context->getBizCode()
+            "biz_msg" => $context - getBizMsg()
         ];
 
         // 打印请求头
@@ -141,7 +141,7 @@ class LoggingFilter implements Filter
         }
 
         // 根据慢日志阈值和错误情况记录日志
-        if ($latency > $this->config($this->prefix . 'latency_threshold')) {
+        if ($latency > $this->config('latency_threshold')) {
             if (isset($fields['error'])) {
                 \Log::error('http client slow', ['global_fields' => $fields]);
             } else {
