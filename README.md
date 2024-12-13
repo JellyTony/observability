@@ -19,13 +19,19 @@ composer require jellytony/observability
 
 1. **服务提供者注册**
 
-   在 Laravel 项目的 `config/app.php` 文件的 `providers` 数组中，添加 `TracingServiceProvider` 和 `LogServiceProvider`：
+   在 Laravel 项目的 `config/app.php` 文件的 `providers` 数组中，添加 `ObservabilityServiceProvider` 和
+   `LogServiceProvider`：
 
    ```php
    JellyTony\Observability\ObservabilityServiceProvider::class,
+   JellyTony\Observability\LogServiceProvider::class,
    ```
 
-   在 Lumen 项目中，在 `bootstrap/app.php` 文件中，添加 `TracingServiceProvider` 和 `LogServiceProvider`：
+   在 Lumen 项目中，在 `bootstrap/app.php` 文件中，添加 `ObservabilityServiceProvider` 和 `LogServiceProvider`：
+   ```php
+   $app->register(JellyTony\Observability\ObservabilityServiceProvider::class); // 注册 ObservabilityServiceProvider 提供器, 注意 顺序， 这个一定要在 LogServiceProvider 之前
+   $app->register(JellyTony\Observability\LogServiceProvider::class); // 注册 LogServiceProvider 提供器
+   ```
 
 2. **配置文件**
 
@@ -34,129 +40,155 @@ composer require jellytony/observability
    例如，配置 Zipkin 追踪：
 
     ```php
-    <?php
-    
-    return [
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Tracing Driver
-    |--------------------------------------------------------------------------
-    |
-    | If you're a Jaeger user, we recommend you avail of zipkin driver with zipkin
-    | compatible HTTP endpoint. Refer to Jaeger documentation for more details.
-    |
-    | Supported: "zipkin", "null"
-    |
-    */
-    
-    'log_path' => env('LOG_PATH', storage_path("logs/lumen.log")),
-    
-    'driver' => env('TRACING_DRIVER', 'zipkin'),
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Service Name
-    |--------------------------------------------------------------------------
-    |
-    | Use this to lookup your application (microservice) on a tracing dashboard.
-    |
-    */
-    
-    'service_name' => env('APP_NAME', 'microservice'),
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Middleware
-    |--------------------------------------------------------------------------
-    |
-    | Configure settings for tracing HTTP requests. You can exclude certain paths
-    | from tracing like '/horizon/api/*' (note that we can use wildcards), allow
-    | headers to be logged or hide values for ones that have sensitive info. It
-    | is also possible to specify content types for which you want to log
-    | request and response bodies.
-    |
-    */
-    
-    'middleware' => [
-        'debug' => env('middleware.debug', false),
-    
-        'request' => [
-            'disable' => env('middleware.request.disable', false),
-            'time_format' => env('middleware.request.time_format', 'Y-m-d H:i:s.u'),
-            'latency_threshold' => env('middleware.request.latency_threshold', 3000),
-            'dump_request_body' => env('middleware.request.dump_request_body', false),
-            'dump_request_headers' => env('middleware.request.dump_request_headers', false),
-            'dump_response_body' => env('middleware.request.dump_response_body', false),
-            'dump_response_headers' => env('middleware.request.dump_response_headers', false),
-        ],
-    
-        'trace' => [
-            'disable' => env('middleware.trace.disable', false),
-            'latency_threshold' => env('middleware.trace.latency_threshold', 3000),
-    
-            'excluded_paths' => [
-                //
-            ],
-    
-            'allowed_headers' => [
-                '*'
-            ],
-    
-            'sensitive_headers' => [
-                //
-            ],
-    
-            'sensitive_input' => [
-                //
-            ],
-    
-            'payload' => [
-                'content_types' => [
-                    'application/json',
-                ],
-            ],
-        ]
-    ],
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Errors
-    |--------------------------------------------------------------------------
-    |
-    | Whether you want to automatically tag span with error=true
-    | to denote the operation represented by the Span has failed
-    | when error message was logged
-    |
-    */
-    
-    'errors' => true,
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Zipkin
-    |--------------------------------------------------------------------------
-    |
-    | Configure settings for a zipkin driver like whether you want to use
-    | 128-bit Trace IDs and what is the max value size for flushed span
-    | tags in bytes. Values bigger than this amount will be discarded
-    | but you will still see whether certain tag was reported or not.
-    |
-    */
-    
-    'zipkin' => [
-        'endpoint' => env('zipkin.HttpReporterUrl', 'http://127.0.0.1:9411/api/v2/spans'),
-        'options' => [
-            '128bit' => env('zipkin.128bit', false),
-            'max_tag_len' => env('zipkin.max_tag_len', 1048576),
-            'request_timeout' => env("zipkin.HttpReporterTimeout", 5),
-        ],
-        'sampler_class' => \Zipkin\Samplers\BinarySampler::class,
-        'percentage_sampler_rate' => env('zipkin.Rate', 1),
-    ],
-    
-    
-    ];
+   <?php
+   
+   return [
+   
+       /*
+       |--------------------------------------------------------------------------
+       | Service Name
+       |--------------------------------------------------------------------------
+       |
+       | Use this to lookup your application (microservice) on a tracing dashboard.
+       |
+       */
+   
+       'service_name' => env('APP_NAME', 'microservice'),
+   
+       'log_path' => env('LOG_PATH', storage_path("logs/lumen.log")),
+   
+       /*
+       |--------------------------------------------------------------------------
+       | Tracing Driver
+       |--------------------------------------------------------------------------
+       |
+       | If you're a Jaeger user, we recommend you avail of zipkin driver with zipkin
+       | compatible HTTP endpoint. Refer to Jaeger documentation for more details.
+       |
+       | Supported: "zipkin", "null"
+       |
+       */
+   
+       'driver' => env('TRACING_DRIVER', 'zipkin'),
+   
+       /*
+       |--------------------------------------------------------------------------
+       | Zipkin
+       |--------------------------------------------------------------------------
+       |
+       | Configure settings for a zipkin driver like whether you want to use
+       | 128-bit Trace IDs and what is the max value size for flushed span
+       | tags in bytes. Values bigger than this amount will be discarded
+       | but you will still see whether certain tag was reported or not.
+       |
+       */
+   
+       'zipkin' => [
+           'endpoint' => env('zipkin.HttpReporterUrl', 'http://127.0.0.1:9411/api/v2/spans'),
+           'options' => [
+               '128bit' => env('zipkin.128bit', false),
+               'max_tag_len' => env('zipkin.max_tag_len', 1048576),
+               'request_timeout' => env("zipkin.HttpReporterTimeout", 5),
+           ],
+           'sampler_class' => \Zipkin\Samplers\BinarySampler::class,
+           'percentage_sampler_rate' => env('zipkin.Rate', 1),
+       ],
+   
+       /*
+       |--------------------------------------------------------------------------
+       | Middleware
+       |--------------------------------------------------------------------------
+       */
+   
+       'middleware' => [
+           'server' => [
+               // Logging Middleware Configuration
+               'logging' => [
+                   'disabled' => env('MIDDLEWARE_SERVER_LOGGING_DISABLED', false), // 是否禁用请求日志
+                   'time_format' => env('MIDDLEWARE_SERVER_LOGGING_TIME_FORMAT', 'Y-m-d H:i:s'), // 时间格式
+                   'latency_threshold' => env('MIDDLEWARE_SERVER_REQUEST_LATENCY_THRESHOLD', 3000), // 延迟阈值，默认为 3 秒
+                   'access_level' => env('MIDDLEWARE_SERVER_LOGGING_ACCESS_LEVEL', 'info'), // 请求日志级别，默认为 info，分为 info 和 debug 两种
+                   'excluded_paths' => env('MIDDLEWARE_SERVER_LOGGING_EXCLUDED_PATHS', []), // 不记录的请求路径
+                   'request_body' => env('MIDDLEWARE_SERVER_LOGGING_REQUEST_BODY', false), // 是否记录请求参数
+                   'request_body_max_size' => env('MIDDLEWARE_SERVER_LOGGING_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                   'request_headers' => env('MIDDLEWARE_SERVER_LOGGING_REQUEST_HEADERS', false), // 是否记录请求头
+                   'response_body' => env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_BODY', false), // 是否记录返回数据
+                   'response_body_max_size' => env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                   'response_headers' => env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_HEADERS', false), // 是否记录返回头
+                   'allowed_headers' => env('MIDDLEWARE_SERVER_LOGGING_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
+                   'sensitive_headers' => env('MIDDLEWARE_SERVER_LOGGING_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                   'sensitive_input' => env('MIDDLEWARE_SERVER_LOGGING_SENSITIVE_INPUT', ['password']), // 敏感的输入
+               ],
+   
+               // Trace Middleware Configuration
+               'trace' => [
+                   'disabled' => env('MIDDLEWARE_SERVER_TRACE_DISABLED', false), // 是否禁用
+                   'latency_threshold' => env('MIDDLEWARE_SERVER_TRACE_LATENCY_THRESHOLD', 3000),  // 延迟阈值, 默认为 3 秒
+                   'excluded_paths' => env('MIDDLEWARE_SERVER_TRACE_EXCLUDED_PATHS', []), // 不记录的请求路径
+                   'request_body' => env('MIDDLEWARE_SERVER_TRACE_REQUEST_BODY', false), // 是否记录请求参数
+                   'request_body_max_size' => env('MIDDLEWARE_SERVER_TRACE_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                   'request_headers' => env('MIDDLEWARE_SERVER_TRACE_REQUEST_HEADERS', false), // 是否记录请求头
+                   'response_body' => env('MIDDLEWARE_SERVER_TRACE_RESPONSE_BODY', false), // 是否记录返回数据
+                   'response_body_max_size' => env('MIDDLEWARE_SERVER_TRACE_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                   'response_headers' => env('MIDDLEWARE_SERVER_TRACE_RESPONSE_HEADERS', false), // 是否记录返回头
+                   'allowed_headers' => env('MIDDLEWARE_SERVER_TRACE_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
+                   'sensitive_headers' => env('MIDDLEWARE_SERVER_TRACE_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                   'sensitive_input' => env('MIDDLEWARE_SERVER_TRACE_SENSITIVE_INPUT', ['password']), // 敏感的输入
+               ],
+           ],
+   
+           'client' => [
+               // Logging Middleware Configuration
+               'logging' => [
+                   'disabled' => env('MIDDLEWARE_CLIENT_LOGGING_DISABLED', false), // 是否禁用请求日志
+                   'time_format' => env('MIDDLEWARE_CLIENT_LOGGING_TIME_FORMAT', 'Y-m-d H:i:s'), // 时间格式
+                   'latency_threshold' => env('MIDDLEWARE_CLIENT_REQUEST_LATENCY_THRESHOLD', 3000), // 延迟阈值，默认为 3 秒
+                   'access_level' => env('MIDDLEWARE_CLIENT_LOGGING_ACCESS_LEVEL', 'info'), // 请求日志级别，默认为 info，分为 info 和 debug 两种
+                   'excluded_paths' => env('MIDDLEWARE_CLIENT_LOGGING_EXCLUDED_PATHS', []), // 不记录的请求路径
+                   'request_body' => env('MIDDLEWARE_CLIENT_LOGGING_REQUEST_BODY', false), // 是否记录请求参数
+                   'request_body_max_size' => env('MIDDLEWARE_CLIENT_LOGGING_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                   'request_headers' => env('MIDDLEWARE_CLIENT_LOGGING_REQUEST_HEADERS', false), // 是否记录请求头
+                   'response_body' => env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_BODY', false), // 是否记录返回数据
+                   'response_body_max_size' => env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                   'response_headers' => env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_HEADERS', false), // 是否记录返回头
+                   'allowed_headers' => env('MIDDLEWARE_CLIENT_LOGGING_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
+                   'sensitive_headers' => env('MIDDLEWARE_CLIENT_LOGGING_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                   'sensitive_input' => env('MIDDLEWARE_CLIENT_LOGGING_SENSITIVE_INPUT', ['password']), // 敏感的输入
+               ],
+   
+               // Trace Middleware Configuration
+               'trace' => [
+                   'disabled' => env('MIDDLEWARE_CLIENT_TRACE_DISABLED', false), // 是否禁用
+                   'latency_threshold' => env('MIDDLEWARE_CLIENT_TRACE_LATENCY_THRESHOLD', 3000),  // 延迟阈值, 默认为 3 秒
+                   'excluded_paths' => env('MIDDLEWARE_CLIENT_TRACE_EXCLUDED_PATHS', []), // 不记录的请求路径
+                   'request_body' => env('MIDDLEWARE_CLIENT_TRACE_REQUEST_BODY', false), // 是否记录请求参数
+                   'request_body_max_size' => env('MIDDLEWARE_CLIENT_TRACE_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                   'request_headers' => env('MIDDLEWARE_CLIENT_TRACE_REQUEST_HEADERS', false), // 是否记录请求头
+                   'response_body' => env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_BODY', false), // 是否记录返回数据
+                   'response_body_max_size' => env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
+                   'response_headers' => env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_HEADERS', false), // 是否记录返回头
+                   'allowed_headers' => env('MIDDLEWARE_CLIENT_TRACE_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
+                   'sensitive_headers' => env('MIDDLEWARE_CLIENT_TRACE_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                   'sensitive_input' => env('MIDDLEWARE_CLIENT_TRACE_SENSITIVE_INPUT', ['password']), // 敏感的输入
+               ],
+           ]
+       ],
+   
+       /*
+       |--------------------------------------------------------------------------
+       | Errors
+       |--------------------------------------------------------------------------
+       |
+       | Whether you want to automatically tag span with error=true
+       | to denote the operation represented by the Span has failed
+       | when error message was logged
+       |
+       */
+   
+       'errors' => true,
+   
+   
+   ];
     ```
 
    你可以根据需要更改 Zipkin 的配置或选择不同的追踪系统（如 Jaeger）。
@@ -165,7 +197,7 @@ composer require jellytony/observability
 
 ### 启用请求跟踪
 
-在 Laravel 中，追踪功能会自动处理 HTTP 请求和响应的追踪。你只需要确保 `TracingServiceProvider` 已正确注册，系统会自动捕获每个请求的信息。
+在 Laravel 中，追踪功能会自动处理 HTTP 请求和响应的追踪。你只需要确保 `ObservabilityServiceProvider` 已正确注册，系统会自动捕获每个请求的信息。
 
 ### 启动日志注入 trace 信息
 
@@ -175,16 +207,15 @@ composer require jellytony/observability
 
 该项目提供了一些自定义中间件用于处理请求跟踪：
 
-- `RequestIdMiddleware`：生成唯一的请求 ID。
-- `RequestLog`：记录请求日志。
-- `TraceRequests`：执行请求的追踪逻辑。
+- `RequestID` ：生成唯一的请求 ID。
+- `RequestLogging`：记录请求日志。
+- `Tracing`：执行请求的追踪逻辑。
 
 这些中间件可以在 laravel 的 `app/Http/Kernel.php` 中启用：
 
 ```php
 protected $middleware = [
     \JellyTony\Observability\Middleware\RequestID::class,
-    \JellyTony\Observability\Middleware\ExceptionCapture::class
     \JellyTony\Observability\Middleware\Tracing::class,
     \JellyTony\Observability\Middleware\RequestLogging::class,
 ];
@@ -194,20 +225,18 @@ protected $middleware = [
 
 ```php
     'request_id' => JellyTony\Observability\Middleware\RequestID::class,
-    'exception_capture' =>\JellyTony\Observability\Middleware\ExceptionCapture::class 
     'tracing' => JellyTony\Observability\Middleware\Tracing::class,
-    'request_log' => JellyTony\Observability\Middleware\RequestLogging::class,
+    'logging' => JellyTony\Observability\Middleware\RequestLogging::class,
 ```
 
 然后在 `routes/web.php` 路由中添加路由，例如：
 
 ```php
-<?php
-$app->group(['middleware' => ['request_id','exception_capture','zipkin','request_id']], function (
+$app->group(['middleware' => ['request_id','tracing','logging']], function (
     $app->get('/', function () {
         return $app->version();
     })
-) )
+))
 ```
 
 ### 使用追踪服务
@@ -261,5 +290,3 @@ $span = $this->tracer->startSpan($spanName, $extractedContext);
 ## 许可证
 
 MIT License.
-
-你可以直接复制以上内容作为 Markdown 文件。
