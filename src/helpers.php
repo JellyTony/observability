@@ -145,7 +145,9 @@ if (!function_exists('createFilterRequest')) {
      */
     function createFilterRequest(string $method, string $uri, array $headers = [], $body = null, string $version = '1.1'): Request
     {
-        return new Request($method, $uri, $headers, $body, $version);
+        $req = new Request($method, $uri, [], $body, $version);
+        $req->setCurlHeaders($headers);
+        return $req;
     }
 }
 
