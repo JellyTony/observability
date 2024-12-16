@@ -13,6 +13,9 @@ trait BusinessContextTrait
      */
     public function setBizCode($code)
     {
+        if(!empty($this->bizCode)) {
+            return;
+        }
         $this->bizCode = $code;
     }
 
@@ -22,6 +25,9 @@ trait BusinessContextTrait
      */
     public function setBizMsg($msg)
     {
+        if (!empty($this->bizMsg)) {
+            return;
+        }
         $this->bizMsg = $msg;
     }
 
