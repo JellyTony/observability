@@ -152,6 +152,9 @@ trait MessageTrait
      */
     public function setCurlHeaders(array $curlHeaders): void
     {
+        if (empty($curlHeaders)) {
+            return;
+        }
         foreach ($curlHeaders as $header) {
             if (is_string($header) && strpos($header, ':') !== false) {
                 list($name, $value) = explode(':', $header, 2);
