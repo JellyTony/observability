@@ -106,9 +106,8 @@ class Response
      * 从 curl_getinfo 获取响应信息
      * @param array $curlInfo
      * @param $body
-     * @return Response
      */
-    public function fromCurlInfo(array $curlInfo, $body): Response
+    public function fromCurlInfo(array $curlInfo, $body)
     {
         // 取得状态码
         $statusCode = 200;
