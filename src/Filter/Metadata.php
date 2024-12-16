@@ -55,7 +55,7 @@ class Metadata implements Filter
         foreach ($mds as $key => $values) {
             if ($this->hasPrefix($key)) {
                 foreach ($values as $value)
-                $headers[$key] = $value;
+                    $headers[$key] = $value;
             }
         }
 
