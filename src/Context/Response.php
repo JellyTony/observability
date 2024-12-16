@@ -113,7 +113,7 @@ class Response
 
         // 取得响应头
         if (!empty($curlInfo['request_header'])) {
-            $headers = self::parseHeaders($curlInfo['request_header']);
+            $headers = $this->parseHeaders($curlInfo['request_header']);
             $this->setHeaders($headers);
         }
 
