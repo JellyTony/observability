@@ -102,7 +102,12 @@ class Response
     }
 
 
-    public function fromCurlInfo(array $curlInfo, $body): Response
+    /**
+     * 从 curl_getinfo 获取响应信息
+     * @param array $curlInfo
+     * @param $body
+     */
+    public function fromCurlInfo(array $curlInfo, $body)
     {
         // 取得状态码
         $statusCode = 200;
@@ -113,7 +118,7 @@ class Response
 
         // 取得响应头
         if (!empty($curlInfo['request_header'])) {
-            $headers = self::parseHeaders($curlInfo['request_header']);
+            $headers = $this->parseHeaders($curlInfo['request_header']);
             $this->setHeaders($headers);
         }
 
@@ -124,7 +129,7 @@ class Response
     }
 
     // 解析 headers
-    private static function parseHeaders(string $headerStr): array
+    private function parseHeaders(string $headerStr): array
     {
         $headers = [];
         $lines = explode("\r\n", $headerStr);
