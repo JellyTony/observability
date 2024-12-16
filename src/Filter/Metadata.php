@@ -52,12 +52,13 @@ class Metadata implements Filter
 
         // x-md-global-
         $mds = RawMetadata::getAll();
-        foreach ($mds as $key => $value) {
+        foreach ($mds as $key => $values) {
             if ($this->hasPrefix($key)) {
+                foreach ($values as $value)
                 $headers[$key] = $value;
             }
         }
-
+        
         if (!empty($headers)) {
             $context->getRequest()->setHeaders($headers);
         }

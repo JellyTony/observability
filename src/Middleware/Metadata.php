@@ -34,8 +34,8 @@ class Metadata
      */
     public function hasPrefix(string $key): bool
     {
-        $prefix = $this->config('prefix', ["x-md-"]); // x-md-global-, x-md-local
-        foreach ($prefix as $k => $v) {
+        $prefixes = $this->config('prefix', ["x-md-"]); // x-md-global-, x-md-local
+        foreach ($prefixes as $prefix) {
             if (strpos($key, $prefix) === 0) {
                 return true;
             }
@@ -53,9 +53,11 @@ class Metadata
     public function handle(Request $request, Closure $next)
     {
         $headers = $request->headers->all();
-        foreach ($headers as $key => $value) {
+        foreach ($headers as $key => $values) {
             if ($this->hasPrefix($key)) {
-                RawMetadata::set($key, $value);
+                foreach ($values as $value) {
+                    RawMetadata::set($key, $value);
+                }
             }
         }
 
