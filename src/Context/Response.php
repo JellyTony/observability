@@ -105,23 +105,22 @@ class Response
     public function fromCurlInfo(array $curlInfo, $body): Response
     {
         // 取得状态码
-        if (empty($curlInfo)) {
-            return new self(200, [], $body);
-        }
-
         $statusCode = 200;
         if (!empty($curlInfo['http_code'])) {
             $statusCode = $curlInfo['http_code'];
+            $this->setStatusCode($statusCode);
         }
 
         // 取得响应头
-        $headers = [];
         if (!empty($curlInfo['request_header'])) {
             $headers = self::parseHeaders($curlInfo['request_header']);
+            $this->setHeaders($headers);
         }
 
-        // 根据状态码创建 Response 对象
-        return new self($statusCode, $headers, $body);
+        // 设置 body
+        if (!empty($body)) {
+            $this->setBody($body);
+        }
     }
 
     // 解析 headers
@@ -131,7 +130,7 @@ class Response
         $lines = explode("\r\n", $headerStr);
         foreach ($lines as $line) {
             if (empty($line)) continue;
-            list($key, $value) = explode(': ', $line, 2);
+            list($key, $value) = explode(':', $line, 2);
             $headers[$key] = $value;
         }
         return $headers;
