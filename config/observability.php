@@ -42,14 +42,14 @@ return [
     */
 
     'zipkin' => [
-        'endpoint' => env('zipkin.HttpReporterUrl', 'http://127.0.0.1:9411/api/v2/spans'),
+        'endpoint' => env('ZIPKIN_ENDPOINT', 'http://127.0.0.1:9411/api/v2/spans'),
         'options' => [
-            '128bit' => env('zipkin.128bit', false),
-            'max_tag_len' => env('zipkin.max_tag_len', 1048576),
-            'request_timeout' => env("zipkin.HttpReporterTimeout", 5),
+            '128bit' => env('ZIPKIN_128BIT', false),
+            'max_tag_len' => env('ZIPKIN_MAX_TAG_LEN', 1048576),
+            'request_timeout' => env("ZIPKIN_REQUEST_TIMEOUT", 5),
         ],
         'sampler_class' => \Zipkin\Samplers\BinarySampler::class,
-        'percentage_sampler_rate' => env('zipkin.Rate', 1),
+        'percentage_sampler_rate' => env('ZIPKIN_SAMPLER', 1),
     ],
 
     /*
