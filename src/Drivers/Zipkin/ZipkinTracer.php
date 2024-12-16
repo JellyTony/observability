@@ -52,6 +52,8 @@ class ZipkinTracer implements Tracer
      */
     protected $sampler;
 
+    protected $reporterType = 'http';
+
     /**
      * @var \Zipkin\DefaultTracing|RawTracer
      */
@@ -164,7 +166,7 @@ class ZipkinTracer implements Tracer
      *
      * @return Span|null
      */
-    public function getRootSpan():?Span
+    public function getRootSpan(): ?Span
     {
         return $this->rootSpan;
     }
@@ -184,7 +186,8 @@ class ZipkinTracer implements Tracer
      *
      * @return RawTracer
      */
-    public function getTracer(): RawTracer {
+    public function getTracer(): RawTracer
+    {
         return $this->tracing->getTracer();
     }
 
@@ -194,7 +197,8 @@ class ZipkinTracer implements Tracer
      *
      * @return Propagation
      */
-    public function getPropagation(): Propagation {
+    public function getPropagation(): Propagation
+    {
         return $this->tracing->getPropagation();
     }
 
@@ -205,7 +209,8 @@ class ZipkinTracer implements Tracer
      * @return bool
      * @see Span#isNoop()
      */
-    public function isNoop(): bool {
+    public function isNoop(): bool
+    {
         return $this->tracing->isNoop();
     }
 
@@ -226,11 +231,18 @@ class ZipkinTracer implements Tracer
     protected function createReporter(): Reporter
     {
         if (!$this->reporter) {
-            $curlFactory = HttpReporter\CurlFactory::create();
-            $this->reporter = new HttpReporter($curlFactory, [
-                'endpoint_url' => $this->endpointUrl,
-                'timeout' => $this->requestTimeout,
-            ]);
+            switch ($this->reporterType) {
+                case 'log':
+                    $this->reporter = new LogReporter();
+                    break;
+                default:
+                    $log = new LogReporter();
+                    $curlFactory = HttpReporter\CurlFactory::create();
+                    $this->reporter = new HttpReporter($curlFactory, [
+                        'endpoint_url' => $this->endpointUrl,
+                        'timeout' => $this->requestTimeout,
+                    ], $log);
+            }
         }
 
         return $this->reporter;

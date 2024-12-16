@@ -149,7 +149,7 @@ class TraceFilter implements Filter
             $bodySize = strlen($context->getRequest()->getBodySize());
             if ($maxSize > 0 && $bodySize <= $maxSize) {
                 $span->tag('http.request.size', $bodySize);
-                $span->tag('http.request.body', json_encode($this->headerFilter->filterInput($context->getRequest()->getData())));
+                $span->tag('http.request.body', base64_encode(json_encode($this->headerFilter->filterInput($context->getRequest()->getData()))));
             }
         }
         // 上报响应数据
@@ -158,7 +158,7 @@ class TraceFilter implements Filter
             $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $replySize <= $maxSize) {
                 $span->tag('http.response.size', $replySize);
-                $span->tag('http.response.body', $context->getResponse()->getBody());
+                $span->tag('http.response.body', base64_encode($context->getResponse()->getBody()));
             }
         }
 

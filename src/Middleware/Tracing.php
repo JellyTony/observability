@@ -115,7 +115,6 @@ class Tracing
         $duration = ($endTime - $startTime) * 1000;
         $latency = round($duration, 2);
 
-
         // 慢请求、或者特定标识的请求
         if ($latency > $this->config('latency_threshold') || isMpDebug()) {
             $this->interested = true;
@@ -210,12 +209,13 @@ class Tracing
             $span->tag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
         }
         // 上报请求请求
+
         if ($this->interested || $this->config('request_body')) {
             $maxSize = $this->config('request_body_max_size', 0);
             $bodySize = strlen($request->getContent());
             if ($maxSize > 0 && $bodySize <= $maxSize) {
                 $span->tag('http.request.size', $bodySize);
-                $span->tag('http.request.body', json_encode($this->filterInput($request->input())));
+                $span->tag('http.request.body', base64_encode(json_encode($this->filterInput($request->input()))));
             }
         }
         // 上报响应数据
@@ -224,10 +224,11 @@ class Tracing
             $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $replySize <= $maxSize) {
                 $span->tag('http.response.size', $replySize);
-                $span->tag('http.response.body', $data);
+                $span->tag('http.response.body', base64_encode($data));
             }
         }
     }
+
 
     /**
      * @param string $path
@@ -309,7 +310,7 @@ class Tracing
             }
         }
 
-        return $content;
+        return base64_encode($content);
     }
 
     /**
