@@ -10,8 +10,6 @@ use JellyTony\Observability\Metadata\Metadata;
 
 class ObservabilityServiceProvider extends ServiceProvider
 {
-    protected $defer = true;
-
     /**
      * Bootstrap the application services.
      *
@@ -27,7 +25,7 @@ class ObservabilityServiceProvider extends ServiceProvider
 
         if (method_exists($this->app, 'terminating')) {
             $this->app->terminating(function () {
-                if(!empty(Trace::getRootSpan())) {
+                if (!empty(Trace::getRootSpan())) {
                     Trace::getRootSpan()->finish();
                 }
                 Trace::flush();
@@ -68,20 +66,10 @@ class ObservabilityServiceProvider extends ServiceProvider
             return new Metadata($app->make(InMemoryMetadataStorage::class));
         });
 
-        $this->app->singleton(Metadata::class, function(){
+        $this->app->singleton(Metadata::class, function () {
             return new Metadata();
         });
 
         $this->app->alias(Metadata::class, 'metadata');
-    }
-
-    public function provides()
-    {
-        return [
-            TracingDriverManager::class,
-            Tracer::class,
-            InMemoryMetadataStorage::class,
-            Metadata::class,
-        ];
     }
 }

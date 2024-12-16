@@ -13,7 +13,7 @@ trait BusinessContextTrait
      */
     public function setBizCode($code)
     {
-        if(!empty($this->bizCode)) {
+        if ($this->bizCode > 1000) {
             return;
         }
         $this->bizCode = $code;
@@ -25,9 +25,6 @@ trait BusinessContextTrait
      */
     public function setBizMsg($msg)
     {
-        if (!empty($this->bizMsg)) {
-            return;
-        }
         $this->bizMsg = $msg;
     }
 
@@ -54,10 +51,12 @@ trait BusinessContextTrait
             return;
         }
 
+        if (!empty($content['code']) && $this->bizCode > 1000) {
+            return;
+        }
         if (!empty($content['code'])) {
             $this->setBizCode($content['code']);
         }
-
         if (!empty($content['msg'])) {
             $this->setBizMsg($content['msg']);
         }
