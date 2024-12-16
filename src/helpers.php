@@ -196,3 +196,20 @@ if (!function_exists('handleServerError')) {
         Metadata::set(Constant::BIZ_MSG, $exception->getMessage());
     }
 }
+
+// 获取环境变量数组
+if (!function_exists('envArray')) {
+    /**
+     * 获取环境变量数组
+     * @param $key
+     * @return array|false|string[]
+     */
+    function envArray($key, $default = [])
+    {
+        $val = env($key);
+        if (empty($val)) {
+            return $default;
+        }
+        return explode(',', $val);
+    }
+}
