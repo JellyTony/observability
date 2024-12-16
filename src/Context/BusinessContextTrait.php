@@ -25,6 +25,9 @@ trait BusinessContextTrait
      */
     public function setBizMsg($msg)
     {
+        if (!empty($this->bizMsg)) {
+            return;
+        }
         $this->bizMsg = $msg;
     }
 
