@@ -13,6 +13,7 @@ class ServiceInfoProcessor implements LogProcessor
         $record->set('app_name', env('APP_NAME', 'microservice'));
         $record->set('app_version', env('APP_VERSION', '1.0.0'));
         $record->set('deploy_env', env('APP_DEPLOY_ENV', 'test'));
+        $record->set('instance_id', gethostname());
 
         return $record;
     }
