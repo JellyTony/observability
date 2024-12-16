@@ -58,7 +58,7 @@ class Metadata implements Filter
                 $headers[$key] = $value;
             }
         }
-        
+
         if (!empty($headers)) {
             $context->getRequest()->setHeaders($headers);
         }
