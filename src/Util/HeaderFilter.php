@@ -83,7 +83,7 @@ class HeaderFilter
             }
         }
 
-        return $content;
+        return base64_encode($content);
     }
 
     /**

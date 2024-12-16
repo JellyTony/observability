@@ -215,7 +215,7 @@ class Tracing
             $bodySize = strlen($request->getContent());
             if ($maxSize > 0 && $bodySize <= $maxSize) {
                 $span->tag('http.request.size', $bodySize);
-                $span->tag('http.request.body', json_encode($this->filterInput($request->input())));
+                $span->tag('http.request.body', base64_encode(json_encode($this->filterInput($request->input()))));
             }
         }
         // 上报响应数据
@@ -224,7 +224,7 @@ class Tracing
             $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $replySize <= $maxSize) {
                 $span->tag('http.response.size', $replySize);
-                $span->tag('http.response.body', $data);
+                $span->tag('http.response.body', base64_encode($data));
             }
         }
     }
@@ -310,7 +310,7 @@ class Tracing
             }
         }
 
-        return $content;
+        return base64_encode($content);
     }
 
     /**

@@ -73,8 +73,8 @@ return [
                 'response_body' => (bool)env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_BODY', false), // 是否记录返回数据
                 'response_body_max_size' => (int)env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
                 'response_headers' => (bool)env('MIDDLEWARE_SERVER_LOGGING_RESPONSE_HEADERS', false), // 是否记录返回头
-                'allowed_headers' => envArray('MIDDLEWARE_SERVER_LOGGING_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
-                'sensitive_headers' => envArray('MIDDLEWARE_SERVER_LOGGING_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                'allowed_headers' => envArray('MIDDLEWARE_SERVER_LOGGING_ALLOWED_HEADERS', ['*']), // 允许的头部
+                'sensitive_headers' => envArray('MIDDLEWARE_SERVER_LOGGING_SENSITIVE_HEADERS', []), // 敏感的头部
                 'sensitive_input' => envArray('MIDDLEWARE_SERVER_LOGGING_SENSITIVE_INPUT', ['password']), // 敏感的输入
             ],
 
@@ -89,8 +89,8 @@ return [
                 'response_body' => (bool)env('MIDDLEWARE_SERVER_TRACE_RESPONSE_BODY', false), // 是否记录返回数据
                 'response_body_max_size' => (int)env('MIDDLEWARE_SERVER_TRACE_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
                 'response_headers' => (bool)env('MIDDLEWARE_SERVER_TRACE_RESPONSE_HEADERS', false), // 是否记录返回头
-                'allowed_headers' => envArray('MIDDLEWARE_SERVER_TRACE_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
-                'sensitive_headers' => envArray('MIDDLEWARE_SERVER_TRACE_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                'allowed_headers' => envArray('MIDDLEWARE_SERVER_TRACE_ALLOWED_HEADERS', ['*']), // 允许的头部
+                'sensitive_headers' => envArray('MIDDLEWARE_SERVER_TRACE_SENSITIVE_HEADERS', []), // 敏感的头部
                 'sensitive_input' => envArray('MIDDLEWARE_SERVER_TRACE_SENSITIVE_INPUT', ['password']), // 敏感的输入
             ],
         ],
@@ -109,8 +109,8 @@ return [
                 'response_body' => (bool)env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_BODY', false), // 是否记录返回数据
                 'response_body_max_size' => (int)env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
                 'response_headers' => (bool)env('MIDDLEWARE_CLIENT_LOGGING_RESPONSE_HEADERS', false), // 是否记录返回头
-                'allowed_headers' => envArray('MIDDLEWARE_CLIENT_LOGGING_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
-                'sensitive_headers' => envArray('MIDDLEWARE_CLIENT_LOGGING_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                'allowed_headers' => envArray('MIDDLEWARE_CLIENT_LOGGING_ALLOWED_HEADERS', ['*']), // 允许的头部
+                'sensitive_headers' => envArray('MIDDLEWARE_CLIENT_LOGGING_SENSITIVE_HEADERS', []), // 敏感的头部
                 'sensitive_input' => envArray('MIDDLEWARE_CLIENT_LOGGING_SENSITIVE_INPUT', ['password']), // 敏感的输入
             ],
 
@@ -125,8 +125,8 @@ return [
                 'response_body' => (bool)env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_BODY', false), // 是否记录返回数据
                 'response_body_max_size' => (int)env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
                 'response_headers' => (bool)env('MIDDLEWARE_CLIENT_TRACE_RESPONSE_HEADERS', false), // 是否记录返回头
-                'allowed_headers' => envArray('MIDDLEWARE_CLIENT_TRACE_ALLOWED_HEADERS', ['Content-Type', 'Authorization']), // 允许的头部
-                'sensitive_headers' => envArray('MIDDLEWARE_CLIENT_TRACE_SENSITIVE_HEADERS', ['Authorization', 'Cookie']), // 敏感的头部
+                'allowed_headers' => envArray('MIDDLEWARE_CLIENT_TRACE_ALLOWED_HEADERS', ['*']), // 允许的头部
+                'sensitive_headers' => envArray('MIDDLEWARE_CLIENT_TRACE_SENSITIVE_HEADERS', []), // 敏感的头部
                 'sensitive_input' => envArray('MIDDLEWARE_CLIENT_TRACE_SENSITIVE_INPUT', ['password']), // 敏感的输入
             ],
         ]
