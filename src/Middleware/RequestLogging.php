@@ -5,6 +5,7 @@ namespace JellyTony\Observability\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\Config\Repository;
 use JellyTony\Observability\Util\HeaderFilter;
 
