@@ -177,12 +177,22 @@ class Tracing
     {
         $span->tag('type', 'http');
         $span->setKind("SERVER");
-        $span->tag("http.client_ip", $request->ip());
-        $span->tag("http.user_agent", $request->userAgent());
+        if ($v = $request->ip() && !empty($v)) {
+            $span->tag("http.client_ip", $v);
+        }
+        if ($v = $request->userAgent() && !empty($v)) {
+            $span->tag("http.user_agent", $v);
+        }
         $span->tag("caller.service_name", $request->header('x-md-local-caller_service', 'unknown'));
-        $span->tag("http.method", $request->getMethod());
-        $span->tag("http.url", $request->fullUrl());
-        $span->tag('http.route', $request->path());
+        if ($v = $request->getMethod() && !empty($v)) {
+            $span->tag("http.method", $v);
+        }
+       if ($v = $request->fullUrl() && !empty($v)) {
+           $span->tag("http.url", $v);
+       }
+       if ($v =  $request->path() && !empty($v)) {
+           $span->tag('http.route', $v);
+       }
     }
 
     /**
