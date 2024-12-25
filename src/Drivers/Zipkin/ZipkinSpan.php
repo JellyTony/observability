@@ -95,6 +95,9 @@ class ZipkinSpan implements Span
      */
     public function tag(string $key, string $value): void
     {
+        if (empty($key) ||empty($value)) {
+            return;
+        }
         if (is_numeric($value)) {
             $value = strval($value);
         }
