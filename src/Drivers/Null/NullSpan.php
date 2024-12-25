@@ -100,6 +100,10 @@ class NullSpan implements Span
 
     }
 
+    public function addTag($key,$val): void {
+
+    }
+
     public function setTags(array $values): void
     {
 

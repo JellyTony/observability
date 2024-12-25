@@ -104,6 +104,15 @@ class ZipkinSpan implements Span
         $this->span->tag($key, $value);
     }
 
+    public function addTag($key,$val): void
+    {
+        if (empty($key) ||empty($val)) {
+            return;
+        }
+
+        $this->tag($key,$val);
+    }
+
     /**
      * Adds multiple tags at once.
      * @param array $values

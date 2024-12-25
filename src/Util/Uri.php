@@ -382,6 +382,9 @@ class Uri implements UrlAbstract,\JsonSerializable
 
     public function getHost(): string
     {
+        if ($this->host === '') {
+            return '';
+        }
         return $this->host;
     }
 

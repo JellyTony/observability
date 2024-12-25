@@ -82,11 +82,11 @@ class TraceFilter implements Filter
         $spanName = sprintf("HTTP Client %s: %s", $method, $path);
         $span = Trace::startSpan($spanName, Trace::getRootSpan()->getContext());
         $span->setKind("CLIENT");
-        $span->tag(Tags\HTTP_METHOD, $method);
-        $span->tag(Tags\HTTP_PATH, $path);
-        $span->tag(Tags\HTTP_HOST, $context->getRequest()->getUri()->getHost());
-        $span->tag(Tags\HTTP_URL, $context->getRequest()->getUri()->__toString());
-        $span->tag('target.service_name', getServiceName($service));
+        $span->addTag(Tags\HTTP_METHOD, $method);
+        $span->addTag(Tags\HTTP_PATH, $path);
+        $span->addTag(Tags\HTTP_HOST, $context->getRequest()->getUri()->getHost());
+        $span->addTag(Tags\HTTP_URL, $context->getRequest()->getUri()->__toString());
+        $span->addTag('target.service_name', getServiceName($service));
 
         // 向  header 头注入 traceId 信息
         $h = [];
@@ -129,27 +129,27 @@ class TraceFilter implements Filter
             $this->interested = true;
         }
 
-        $span->tag(Constant::BIZ_CODE, $context->getBizCode());
+        $span->addTag(Constant::BIZ_CODE, $context->getBizCode());
         if (!empty($context->getBizMsg()) && $context->getBizCode() > Constant::BIZ_CODE_SUCCESS) {
-            $span->tag('error', $context->getBizMsg());
+            $span->addTag('error', $context->getBizMsg());
         }
-        $span->tag(Tags\HTTP_STATUS_CODE, $context->getResponse()->getStatusCode());
+        $span->addTag(Tags\HTTP_STATUS_CODE, $context->getResponse()->getStatusCode());
 
         // 上报请求头
         if ($this->interested || $this->config('request_headers')) {
-            $span->tag('http.request.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getRequest()->getHeaders())));
+            $span->addTag('http.request.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getRequest()->getHeaders())));
         }
         // 上报响应头
         if ($this->interested || $this->config('response_headers')) {
-            $span->tag('http.response.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getResponse()->getHeaders())));
+            $span->addTag('http.response.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getResponse()->getHeaders())));
         }
         // 上报请求请求
         if ($this->interested || $this->config('request_body')) {
             $maxSize = $this->config('request_body_max_size', 0);
             $bodySize = strlen($context->getRequest()->getBodySize());
             if ($maxSize > 0 && $bodySize <= $maxSize) {
-                $span->tag('http.request.size', $bodySize);
-                $span->tag('http.request.body', base64_encode(json_encode($this->headerFilter->filterInput($context->getRequest()->getData()))));
+                $span->addTag('http.request.size', $bodySize);
+                $span->addTag('http.request.body', base64_encode(json_encode($this->headerFilter->filterInput($context->getRequest()->getData()))));
             }
         }
         // 上报响应数据
@@ -157,8 +157,8 @@ class TraceFilter implements Filter
             $replySize = $context->getResponse()->getBodySize();
             $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $replySize <= $maxSize) {
-                $span->tag('http.response.size', $replySize);
-                $span->tag('http.response.body', base64_encode($context->getResponse()->getBody()));
+                $span->addTag('http.response.size', $replySize);
+                $span->addTag('http.response.body', base64_encode($context->getResponse()->getBody()));
             }
         }
 
