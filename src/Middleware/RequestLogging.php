@@ -66,10 +66,28 @@ class RequestLogging
         return false;
     }
 
+    public function isRequest($request) :bool
+    {
+        if(!empty($request)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isResponse($response) :bool
+    {
+        if (!empty($response) && $response instanceof JsonResponse) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function handle(Request $request, Closure $next)
     {
         // filter path exclude.
-        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled')) {
+        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled') || !$this->isRequest($request)) {
             return $next($request);
         }
 
@@ -96,10 +114,12 @@ class RequestLogging
             'route' => $request->path(),
             'caller_service' => $request->header('x-md-local-caller_service', 'unknown'),
             'latency' => $latency,
-            'http_status' => $response->status(),
             'biz_code' => bizCode(),
             'biz_msg' => bizMsg()
         ];
+        if($this->isResponse($response)) {
+            $fields['http_status'] = $response->status();
+        }
 
         if ($latency > $this->config('latency_threshold') || isMpDebug()) {
             $this->interested = true;
@@ -110,7 +130,7 @@ class RequestLogging
             $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
         }
         // 打印响应头
-        if (($this->interested || $this->config('response_headers')) && !empty($response->headers->all())) {
+        if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) &&  !empty($response->headers->all())) {
             $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($response->headers->all()));
         }
 
@@ -125,8 +145,8 @@ class RequestLogging
         }
 
         // 打印响应数据
-        if (($this->interested || $this->config('response_body')) && !empty($reply) && $reply instanceof JsonResponse) {
-            $responseData = $reply->getData(true);  // 将数据获取为数组
+        if (($this->interested || $this->config('response_body')) && $this->isResponse($response)) {
+            $responseData = $response->getData(true);  // 将数据获取为数组
             $maxSize = $this->config('response_body_max_size', 0);
             $replySize = strlen($response->content());
             if (!empty($responseData) && $maxSize > 0 && $replySize <= $maxSize) {

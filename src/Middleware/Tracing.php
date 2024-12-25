@@ -59,6 +59,24 @@ class Tracing
         return config($this->prefix . $key, $default);
     }
 
+    public function isRequest($request) :bool
+    {
+        if(!empty($request)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isResponse($response) :bool
+    {
+        if (!empty($response) && $response instanceof JsonResponse) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Handle an incoming request.
      *
@@ -175,6 +193,9 @@ class Tracing
      */
     protected function tagRequestData(Span $span, Request $request): void
     {
+        if (!empty($span) || !$this->isRequest($request))  {
+            return;
+        }
         $span->addTag('type', 'http');
         $span->setKind("SERVER");
         $span->addTag("http.client_ip", $request->ip());
@@ -192,24 +213,30 @@ class Tracing
      */
     protected function tagResponseData(Span $span, Request $request, $response): void
     {
+        if (!empty($span) || !$this->isRequest($request)) {
+            return;
+        }
+
         if ($route = $request->route()) {
             if (method_exists($route, 'getActionName')) {
                 $span->addTag('laravel_action', $route->getActionName());
             }
         }
 
-        $span->addTag('http.status_code', strval($response->getStatusCode()));
+        if($this->isResponse($response) && !empty($response->getStatusCode())) {
+            $span->addTag('http.status_code', strval($response->getStatusCode()));
+        }
 
         // 上报请求头
         if ($this->interested || $this->config('request_headers')) {
             $span->addTag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
         }
         // 上报响应头
-        if ($this->interested || $this->config('response_headers')) {
+        if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) && !empty($response->headers)) {
             $span->addTag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
         }
-        // 上报请求请求
 
+        // 上报请求请求
         if ($this->interested || $this->config('request_body')) {
             $maxSize = $this->config('request_body_max_size', 0);
             $bodySize = strlen($request->getContent());
@@ -219,7 +246,7 @@ class Tracing
             }
         }
         // 上报响应数据
-        if (($this->interested || $this->config('response_body')) && $response instanceof JsonResponse && $data = $response->content()) {
+        if (($this->interested || $this->config('response_body')) && $this->isResponse($response) && $data = $response->content()) {
             $replySize = strlen($data);
             $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $replySize <= $maxSize) {
