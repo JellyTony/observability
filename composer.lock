@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "da15e33a446d5a95ca695e162301036a",
+    "content-hash": "70d9ac518721d58c6461b05bc210d094",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -419,16 +419,16 @@
         },
         {
             "name": "openzipkin/zipkin",
-            "version": "2.0.2",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/openzipkin/zipkin-php.git",
-                "reference": "f06a8575104af6f5097168a28e7d5f7263ca4eec"
+                "reference": "e33b25412a6ad69b41d28f582f7166620783acab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openzipkin/zipkin-php/zipball/f06a8575104af6f5097168a28e7d5f7263ca4eec",
-                "reference": "f06a8575104af6f5097168a28e7d5f7263ca4eec",
+                "url": "https://api.github.com/repos/openzipkin/zipkin-php/zipball/e33b25412a6ad69b41d28f582f7166620783acab",
+                "reference": "e33b25412a6ad69b41d28f582f7166620783acab",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -497,9 +497,9 @@
             ],
             "support": {
                 "issues": "https://github.com/openzipkin/zipkin-php/issues",
-                "source": "https://github.com/openzipkin/zipkin-php/tree/2.0.2"
+                "source": "https://github.com/openzipkin/zipkin-php/tree/2.0.0"
             },
-            "time": "2020-11-24T09:47:50+00:00"
+            "time": "2020-09-15T08:16:07+00:00"
         },
         {
             "name": "psr/clock",
