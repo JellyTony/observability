@@ -105,18 +105,17 @@ class Tracing
         $span = $this->tracer->startSpan($spanName, $extractedContext);
         $traceID = $span->getContext()->getTraceId();
         $_SERVER[Constant::HTTP_X_B3_TRACE_ID] = $traceID;
+        Metadata::set(Constant::TRACE_ID, $traceID);
 
         $this->tagRequestData($span, $request);
 
         $reply = $next($request);
-        if (!empty($reply) && $reply instanceof JsonResponse) {
+        if ($this->isResponse($reply)) {
             // 获取 JSON 响应的数据
             $responseData = $reply->getData(true);  // 将数据获取为数组
-
             // 添加 trace_id 和 biz_code 到响应数据
             if (!empty($traceID) && !empty($responseData)) {
                 $responseData[Constant::TRACE_ID] = $traceID;
-                Metadata::set(Constant::TRACE_ID, $traceID);
                 $reply->setData($responseData);  // 将修改后的数据重新设置到响应中
             }
 
@@ -127,6 +126,8 @@ class Tracing
             if (!empty($responseData['msg'])) {
                 Metadata::set(Constant::BIZ_MSG, $responseData['msg']);
             }
+        }else {
+            $span->addTag("error", "response is not json");
         }
 
         $endTime = microtime(true);
