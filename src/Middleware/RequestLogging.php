@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\Config\Repository;
+use JellyTony\Observability\Constant\Constant;
 use JellyTony\Observability\Util\HeaderFilter;
 
 class RequestLogging
@@ -120,6 +121,9 @@ class RequestLogging
         ];
         if($this->isResponse($response)) {
             $fields['http_status'] = $response->status();
+        }
+        if(bizCode() > Constant::BIZ_CODE_SUCCESS) {
+            $fields['error'] = bizMsg();
         }
 
         if ($latency > $this->config('latency_threshold') || isMpDebug()) {

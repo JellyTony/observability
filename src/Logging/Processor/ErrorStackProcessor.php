@@ -11,7 +11,10 @@ class ErrorStackProcessor implements LogProcessor
     public function process(LogRecord $record): LogRecord
     {
         if ($record->get('level') == Logger::ERROR) {
-            $debug_backtrace = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 6, 10);
+            $debug_backtrace = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 6, 20);
+            if (empty($debug_backtrace)) {
+                return $record;
+            }
             $file = substr($debug_backtrace[0]['file'], strlen(dirname(__DIR__)));
             $line = $debug_backtrace[0]['line'];
             $record->set('caller', "$file:$line");

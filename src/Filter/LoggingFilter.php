@@ -4,6 +4,7 @@ namespace JellyTony\Observability\Filter;
 
 use Closure;
 use Illuminate\Support\Str;
+use JellyTony\Observability\Constant\Constant;
 use JellyTony\Observability\Contracts\Filter;
 use JellyTony\Observability\Contracts\Context;
 use JellyTony\Observability\Util\HeaderFilter;
@@ -112,6 +113,9 @@ class LoggingFilter implements Filter
             "biz_code" => $context->getBizCode(),
             "biz_msg" => $context->getBizMsg()
         ];
+        if($context->getBizCode() > Constant::BIZ_CODE_SUCCESS) {
+            $fields['error'] = $context->getBizMsg();
+        }
 
         // 打印请求头
         if ($this->interested || $this->config('request_headers')) {
