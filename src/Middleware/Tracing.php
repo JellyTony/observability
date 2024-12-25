@@ -194,7 +194,7 @@ class Tracing
      */
     protected function tagRequestData(Span $span, Request $request): void
     {
-        if (!empty($span) || !$this->isRequest($request))  {
+        if (empty($span) || !$this->isRequest($request))  {
             return;
         }
         $span->addTag('type', 'http');
@@ -214,7 +214,7 @@ class Tracing
      */
     protected function tagResponseData(Span $span, Request $request, $response): void
     {
-        if (!empty($span) || !$this->isRequest($request)) {
+        if (empty($span) || !$this->isRequest($request)) {
             return;
         }
 
