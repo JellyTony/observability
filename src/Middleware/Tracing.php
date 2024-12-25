@@ -162,9 +162,9 @@ class Tracing
                 $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $routeUri));
             }
 
-            $span->tag(Constant::BIZ_CODE, bizCode());
+            $span->addTag(Constant::BIZ_CODE, bizCode());
             if (bizCode() > Constant::BIZ_CODE_SUCCESS) {
-                $span->tag("error", bizMsg());
+                $span->addTag("error", bizMsg());
             }
         }
     }
@@ -175,24 +175,14 @@ class Tracing
      */
     protected function tagRequestData(Span $span, Request $request): void
     {
-        $span->tag('type', 'http');
+        $span->addTag('type', 'http');
         $span->setKind("SERVER");
-        if ($v = $request->ip() && !empty($v)) {
-            $span->tag("http.client_ip", $v);
-        }
-        if ($v = $request->userAgent() && !empty($v)) {
-            $span->tag("http.user_agent", $v);
-        }
-        $span->tag("caller.service_name", $request->header('x-md-local-caller_service', 'unknown'));
-        if ($v = $request->getMethod() && !empty($v)) {
-            $span->tag("http.method", $v);
-        }
-       if ($v = $request->fullUrl() && !empty($v)) {
-           $span->tag("http.url", $v);
-       }
-       if ($v =  $request->path() && !empty($v)) {
-           $span->tag('http.route', $v);
-       }
+        $span->addTag("http.client_ip", $request->ip());
+        $span->addTag("http.user_agent", $request->userAgent());
+        $span->addTag("caller.service_name", $request->header('x-md-local-caller_service', 'unknown'));
+        $span->addTag("http.method", $request->getMethod());
+        $span->addTag("http.url", $request->fullUrl());
+        $span->addTag('http.route', $request->path());
     }
 
     /**
@@ -204,19 +194,19 @@ class Tracing
     {
         if ($route = $request->route()) {
             if (method_exists($route, 'getActionName')) {
-                $span->tag('laravel_action', $route->getActionName());
+                $span->addTag('laravel_action', $route->getActionName());
             }
         }
 
-        $span->tag('http.status_code', strval($response->getStatusCode()));
+        $span->addTag('http.status_code', strval($response->getStatusCode()));
 
         // 上报请求头
         if ($this->interested || $this->config('request_headers')) {
-            $span->tag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
+            $span->addTag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
         }
         // 上报响应头
         if ($this->interested || $this->config('response_headers')) {
-            $span->tag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
+            $span->addTag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
         }
         // 上报请求请求
 
@@ -224,8 +214,8 @@ class Tracing
             $maxSize = $this->config('request_body_max_size', 0);
             $bodySize = strlen($request->getContent());
             if ($maxSize > 0 && $bodySize <= $maxSize) {
-                $span->tag('http.request.size', $bodySize);
-                $span->tag('http.request.body', base64_encode(json_encode($this->filterInput($request->input()))));
+                $span->addTag('http.request.size', $bodySize);
+                $span->addTag('http.request.body', base64_encode(json_encode($this->filterInput($request->input()))));
             }
         }
         // 上报响应数据
@@ -233,8 +223,8 @@ class Tracing
             $replySize = strlen($data);
             $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $replySize <= $maxSize) {
-                $span->tag('http.response.size', $replySize);
-                $span->tag('http.response.body', base64_encode($data));
+                $span->addTag('http.response.size', $replySize);
+                $span->addTag('http.response.body', base64_encode($data));
             }
         }
     }
