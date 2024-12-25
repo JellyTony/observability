@@ -127,7 +127,7 @@ class Tracing
                 Metadata::set(Constant::BIZ_MSG, $responseData['msg']);
             }
         }else {
-            $span->addTag("error", "response is not json");
+            $span->addTag("response", "response is not json");
         }
 
         $endTime = microtime(true);
