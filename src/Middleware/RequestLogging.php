@@ -132,7 +132,7 @@ class RequestLogging
 
         // 打印请求头
         if ($this->interested || $this->config('request_headers') && !empty($request->headers)) {
-            $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers));
+            $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
         }
         // 打印响应头
         if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) &&  !empty($response->headers)) {
