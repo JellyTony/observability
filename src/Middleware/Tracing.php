@@ -87,7 +87,7 @@ class Tracing
     public function handle(Request $request, Closure $next)
     {
         // filter path exclude.
-        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled') || !mpty($this->tracer)) {
+        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled') || !empty($this->tracer)) {
             return $next($request);
         }
 
