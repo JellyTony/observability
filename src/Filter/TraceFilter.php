@@ -3,12 +3,12 @@
 namespace JellyTony\Observability\Filter;
 
 use Closure;
-use JellyTony\Observability\Util\HeaderFilter;
 use Zipkin\Tags;
 use Illuminate\Support\Str;
 use Zipkin\Propagation\Map;
 use JellyTony\Observability\Facades\Trace;
 use JellyTony\Observability\Contracts\Filter;
+use JellyTony\Observability\Util\HeaderFilter;
 use JellyTony\Observability\Contracts\Context;
 use JellyTony\Observability\Constant\Constant;
 
@@ -62,8 +62,7 @@ class TraceFilter implements Filter
     public function handle(Context $context, Closure $next, array $options = [])
     {
         // filter path exclude.
-        $path = $context->getRequest()->getUri()->getPath();
-        if ($this->shouldBeExcluded($path) || $this->config('disabled')) {
+        if (empty($context->getRequest()->getUri()) || $this->shouldBeExcluded($context->getRequest()->getUri()->getPath()) || $this->config('disabled')) {
             return $next($context, $options);
         }
         // 没有开启 trace，忽略
@@ -79,6 +78,7 @@ class TraceFilter implements Filter
         // inject headers
         $headers = [];
         $method = $context->getRequest()->getMethod();
+        $path = $context->getRequest()->getUri()->getPath();
         $spanName = sprintf("HTTP Client %s: %s", $method, $path);
         $span = Trace::startSpan($spanName, Trace::getRootSpan()->getContext());
         $span->setKind("CLIENT");
@@ -136,15 +136,15 @@ class TraceFilter implements Filter
         $span->addTag(Tags\HTTP_STATUS_CODE, $context->getResponse()->getStatusCode());
 
         // 上报请求头
-        if ($this->interested || $this->config('request_headers')) {
+        if (($this->interested || $this->config('request_headers')) && !empty($context->getRequest()->getHeaders())) {
             $span->addTag('http.request.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getRequest()->getHeaders())));
         }
         // 上报响应头
-        if ($this->interested || $this->config('response_headers')) {
+        if (($this->interested || $this->config('response_headers')) && !empty($context->getResponse()->getHeaders())) {
             $span->addTag('http.response.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getResponse()->getHeaders())));
         }
         // 上报请求请求
-        if ($this->interested || $this->config('request_body')) {
+        if ($this->interested || $this->config('request_body') && !empty($context->getRequest()->getBody())) {
             $maxSize = $this->config('request_body_max_size', 0);
             $bodySize = strlen($context->getRequest()->getBodySize());
             if ($maxSize > 0 && $bodySize <= $maxSize) {
@@ -153,7 +153,7 @@ class TraceFilter implements Filter
             }
         }
         // 上报响应数据
-        if ($this->interested || $this->config('response_body')) {
+        if (($this->interested || $this->config('response_body')) && !empty($context->getResponse()->getBody())) {
             $replySize = $context->getResponse()->getBodySize();
             $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $replySize <= $maxSize) {

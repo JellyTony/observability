@@ -52,6 +52,9 @@ class Metadata implements Filter
 
         // x-md-global-
         $mds = RawMetadata::getAll();
+        if (empty($mds)) {
+            return $next($context, $options);
+        }
         foreach ($mds as $key => $values) {
             if ($this->hasPrefix($key)) {
                 foreach ($values as $value)

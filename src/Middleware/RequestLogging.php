@@ -131,11 +131,11 @@ class RequestLogging
         }
 
         // 打印请求头
-        if ($this->interested || $this->config('request_headers')) {
-            $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
+        if ($this->interested || $this->config('request_headers') && !empty($request->headers)) {
+            $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers));
         }
         // 打印响应头
-        if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) &&  !empty($response->headers->all())) {
+        if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) &&  !empty($response->headers)) {
             $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($response->headers->all()));
         }
 
