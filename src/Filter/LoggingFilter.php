@@ -60,8 +60,7 @@ class LoggingFilter implements Filter
     public function handle(Context $context, Closure $next, array $options = [])
     {
         // filter path exclude.
-        $path = $context->getRequest()->getUri()->getPath();
-        if ($this->shouldBeExcluded($path) || $this->config('disabled')) {
+        if (empty($context->getRequest()->getUri()) || $this->shouldBeExcluded($context->getRequest()->getUri()->getPath()) || $this->config('disabled')) {
             return $next($context, $options);
         }
 
@@ -118,16 +117,16 @@ class LoggingFilter implements Filter
         }
 
         // 打印请求头
-        if ($this->interested || $this->config('request_headers')) {
+        if (($this->interested || $this->config('request_headers')) && !empty($context->getRequest()->getHeaders())) {
             $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getRequest()->getHeaders()));
         }
         // 打印响应头
-        if ($this->interested || $this->config('response_headers')) {
+        if (($this->interested || $this->config('response_headers')) && !empty($context->getResponse()->getHeaders())) {
             $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getResponse()->getHeaders()));
         }
 
         // 打印请求数据
-        if (($this->interested || $this->config('request_body'))) {
+        if ((($this->interested || $this->config('request_body'))) && !empty($context->getRequest()->getData())) {
             $maxSize = $this->config('request_body_max_size', 0);
             if ($maxSize > 0 && $context->getRequest()->getBodySize() <= $maxSize) {
                 $fields['req_size'] = $context->getRequest()->getBodySize();
@@ -136,7 +135,7 @@ class LoggingFilter implements Filter
         }
 
         // 打印响应数据
-        if ($this->interested || $this->config('response_body')) {
+        if (($this->interested || $this->config('response_body')) && !empty($context->getResponse()->getBody())) {
             $maxSize = $this->config('response_body_max_size', 0);
             if ($maxSize > 0 && $context->getResponse()->getBodySize() <= $maxSize) {
                 $fields['reply_size'] = $context->getResponse()->getBodySize();

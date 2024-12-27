@@ -98,6 +98,9 @@ trait MessageTrait
 
     public function setHeader($key, $value): void
     {
+        if (empty($key) || empty($value)) {
+            return;
+        }
         $header = (string)$key;
         $normalized = strtolower($key);
 

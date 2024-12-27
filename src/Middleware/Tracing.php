@@ -59,16 +59,16 @@ class Tracing
         return config($this->prefix . $key, $default);
     }
 
-    public function isRequest($request) :bool
+    public function isRequest($request): bool
     {
-        if(!empty($request)) {
+        if (!empty($request)) {
             return true;
         }
 
         return false;
     }
 
-    public function isResponse($response) :bool
+    public function isResponse($response): bool
     {
         if (!empty($response) && $response instanceof JsonResponse) {
             return true;
@@ -87,7 +87,7 @@ class Tracing
     public function handle(Request $request, Closure $next)
     {
         // filter path exclude.
-        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled')) {
+        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled') || !mpty($this->tracer)) {
             return $next($request);
         }
 
@@ -113,20 +113,21 @@ class Tracing
         if ($this->isResponse($reply)) {
             // 获取 JSON 响应的数据
             $responseData = $reply->getData(true);  // 将数据获取为数组
-            // 添加 trace_id 和 biz_code 到响应数据
-            if (!empty($traceID) && !empty($responseData)) {
-                $responseData[Constant::TRACE_ID] = $traceID;
-                $reply->setData($responseData);  // 将修改后的数据重新设置到响应中
+            if (!empty($responseData) && is_array($responseData)) {
+                // 设置 biz_code 和 biz_msg（如果响应数据中包含这些字段）
+                if (!empty($responseData['code'])) {
+                    Metadata::set(Constant::BIZ_CODE, $responseData['code']);
+                }
+                if (!empty($responseData['msg'])) {
+                    Metadata::set(Constant::BIZ_MSG, $responseData['msg']);
+                }
+            } else {
+                $span->addTag("response", "response is not json");
             }
-
-            // 设置 biz_code 和 biz_msg（如果响应数据中包含这些字段）
-            if (!empty($responseData['code'])) {
-                Metadata::set(Constant::BIZ_CODE, $responseData['code']);
+            if (!empty($reply->headers)) {
+                $reply->headers->set("x-trace-id", $traceID);
             }
-            if (!empty($responseData['msg'])) {
-                Metadata::set(Constant::BIZ_MSG, $responseData['msg']);
-            }
-        }else {
+        } else {
             $span->addTag("response", "response is not json");
         }
 
@@ -142,7 +143,7 @@ class Tracing
             $span->getContext()->withSampled(true);
         }
 
-        $this->terminate($request, $reply);
+        $this->terminate($span,$request, $reply);
 
         $this->finishRootSpan();
 
@@ -161,30 +162,23 @@ class Tracing
     }
 
     /**
+     * @param Span $span
      * @param Request $request
-     * @param Response|JsonResponse $response
+     * @param $response
+     * @return void
      */
-    public function terminate(Request $request, $response)
+    public function terminate(Span $span,Request $request, $response)
     {
-        $span = $this->tracer->getRootSpan();
-        if (!empty($span)) {
-            $this->tagResponseData($span, $request, $response);
+        $route = $request->route();
+        $this->tagResponseData($span, $request, $response);
 
-            $route = $request->route();
+        if ($this->isLaravelRoute($route)) {
+            $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $request->route()->uri()));
+        }
 
-            if ($this->isLaravelRoute($route)) {
-                $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $request->route()->uri()));
-            }
-
-            if ($this->isLumenRoute($route)) {
-                $routeUri = $this->getLumenRouteUri($request->path(), $route[2]);
-                $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $routeUri));
-            }
-
-            $span->addTag(Constant::BIZ_CODE, bizCode());
-            if (bizCode() > Constant::BIZ_CODE_SUCCESS) {
-                $span->addTag("error", bizMsg());
-            }
+        if ($this->isLumenRoute($route)) {
+            $routeUri = $this->getLumenRouteUri($request->path(), $route[2]);
+            $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $routeUri));
         }
     }
 
@@ -194,7 +188,7 @@ class Tracing
      */
     protected function tagRequestData(Span $span, Request $request): void
     {
-        if (empty($span) || !$this->isRequest($request))  {
+        if (empty($span) || !$this->isRequest($request)) {
             return;
         }
         $span->addTag('type', 'http');
@@ -205,6 +199,10 @@ class Tracing
         $span->addTag("http.method", $request->getMethod());
         $span->addTag("http.url", $request->fullUrl());
         $span->addTag('http.route', $request->path());
+        $span->addTag(Constant::BIZ_CODE, bizCode());
+        if (bizCode() > Constant::BIZ_CODE_SUCCESS) {
+            $span->addTag("error", bizMsg());
+        }
     }
 
     /**
@@ -214,7 +212,7 @@ class Tracing
      */
     protected function tagResponseData(Span $span, Request $request, $response): void
     {
-        if (empty($span) || !$this->isRequest($request)) {
+        if (!$this->isRequest($request)) {
             return;
         }
 
@@ -224,12 +222,12 @@ class Tracing
             }
         }
 
-        if($this->isResponse($response) && !empty($response->getStatusCode())) {
+        if ($this->isResponse($response) && !empty($response->getStatusCode())) {
             $span->addTag('http.status_code', strval($response->getStatusCode()));
         }
 
         // 上报请求头
-        if ($this->interested || $this->config('request_headers')) {
+        if (($this->interested || $this->config('request_headers')) && !empty($request->headers)) {
             $span->addTag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
         }
         // 上报响应头
