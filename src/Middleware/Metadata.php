@@ -52,7 +52,7 @@ class Metadata
      */
     public function handle(Request $request, Closure $next)
     {
-        if(e($request) || empty($request->headers)) {
+        if(empty($request->headers)) {
             return $next($request);
         }
         $headers = $request->headers->all();
