@@ -135,9 +135,9 @@ class RequestLogging
             $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
         }
         // 打印响应头
-        if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) &&  !empty($response->headers)) {
-            $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($response->headers->all()));
-        }
+//        if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) &&  !empty($response->headers)) {
+//            $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($response->headers->all()));
+//        }
 
         // 打印请求数据
         if (($this->interested || $this->config('request_body')) && !empty($request->getContent())) {
@@ -150,15 +150,15 @@ class RequestLogging
         }
 
         // 打印响应数据
-        if (($this->interested || $this->config('response_body')) && $this->isResponse($response)) {
-            $responseData = $response->getData(true);  // 将数据获取为数组
-            $maxSize = $this->config('response_body_max_size', 0);
-            $replySize = strlen($response->content());
-            if (!empty($responseData) && $maxSize > 0 && $replySize <= $maxSize) {
-                $fields['reply_size'] = $replySize;
-                $fields['reply_body'] = $responseData;
-            }
-        }
+//        if (($this->interested || $this->config('response_body')) && $this->isResponse($response)) {
+//            $responseData = $response->getData(true);  // 将数据获取为数组
+//            $maxSize = $this->config('response_body_max_size', 0);
+//            $replySize = strlen($response->content());
+//            if (!empty($responseData) && $maxSize > 0 && $replySize <= $maxSize) {
+//                $fields['reply_size'] = $replySize;
+//                $fields['reply_body'] = $responseData;
+//            }
+//        }
 
         // 根据慢日志阈值和错误情况记录日志
         if ($latency > $this->config('latency_threshold')) {

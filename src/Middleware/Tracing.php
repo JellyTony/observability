@@ -231,9 +231,9 @@ class Tracing
             $span->addTag('http.request.headers', $this->transformedHeaders($this->filterHeaders($request->headers)));
         }
         // 上报响应头
-        if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) && !empty($response->headers)) {
-            $span->addTag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
-        }
+//        if (($this->interested || $this->config('response_headers')) && $this->isResponse($response) && !empty($response->headers)) {
+//            $span->addTag('http.response.headers', $this->transformedHeaders($this->filterHeaders($response->headers)));
+//        }
 
         // 上报请求请求
         if ($this->interested || $this->config('request_body')) {
@@ -245,14 +245,14 @@ class Tracing
             }
         }
         // 上报响应数据
-        if (($this->interested || $this->config('response_body')) && $this->isResponse($response) && $data = $response->content()) {
-            $replySize = strlen($data);
-            $maxSize = $this->config('response_body_max_size', 0);
-            if ($maxSize > 0 && $replySize <= $maxSize) {
-                $span->addTag('http.response.size', $replySize);
-                $span->addTag('http.response.body', base64_encode($data));
-            }
-        }
+//        if (($this->interested || $this->config('response_body')) && $this->isResponse($response) && $data = $response->content()) {
+//            $replySize = strlen($data);
+//            $maxSize = $this->config('response_body_max_size', 0);
+//            if ($maxSize > 0 && $replySize <= $maxSize) {
+//                $span->addTag('http.response.size', $replySize);
+//                $span->addTag('http.response.body', base64_encode($data));
+//            }
+//        }
     }
 
 
