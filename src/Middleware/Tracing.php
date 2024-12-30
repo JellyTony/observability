@@ -3,18 +3,18 @@
 namespace JellyTony\Observability\Middleware;
 
 use Closure;
-use Zipkin\Propagation\Map;
-use Illuminate\Support\Str;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use JellyTony\Observability\Constant\Constant;
 use JellyTony\Observability\Contracts\Span;
-use Illuminate\Contracts\Config\Repository;
 use JellyTony\Observability\Contracts\Tracer;
 use JellyTony\Observability\Metadata\Metadata;
-use JellyTony\Observability\Constant\Constant;
 use Symfony\Component\HttpFoundation\HeaderBag;
+use Zipkin\Propagation\Map;
 
 class Tracing
 {
@@ -50,34 +50,6 @@ class Tracing
     }
 
     /**
-     * @param $key
-     * @param $default
-     * @return void
-     */
-    public function config($key = null, $default = null)
-    {
-        return config($this->prefix . $key, $default);
-    }
-
-    public function isRequest($request): bool
-    {
-        if (!empty($request)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public function isResponse($response): bool
-    {
-        if (!empty($response) && $response instanceof JsonResponse) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Handle an incoming request.
      *
      * @param Request $request
@@ -87,7 +59,7 @@ class Tracing
     public function handle(Request $request, Closure $next)
     {
         // filter path exclude.
-        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled') || !empty($this->tracer)) {
+        if ($this->shouldBeExcluded($request->path()) || $this->config('disabled') || empty($this->tracer)) {
             return $next($request);
         }
 
@@ -110,6 +82,9 @@ class Tracing
         $this->tagRequestData($span, $request);
 
         $reply = $next($request);
+        if (!empty($reply) && !empty($reply->headers)) {
+            $reply->headers->set("x-trace-id", $traceID);
+        }
         if ($this->isResponse($reply)) {
             // 获取 JSON 响应的数据
             $responseData = $reply->getData(true);  // 将数据获取为数组
@@ -123,9 +98,6 @@ class Tracing
                 }
             } else {
                 $span->addTag("response", "response is not json");
-            }
-            if (!empty($reply->headers)) {
-                $reply->headers->set("x-trace-id", $traceID);
             }
         } else {
             $span->addTag("response", "response is not json");
@@ -143,7 +115,7 @@ class Tracing
             $span->getContext()->withSampled(true);
         }
 
-        $this->terminate($span,$request, $reply);
+        $this->terminate($span, $request, $reply);
 
         $this->finishRootSpan();
 
@@ -151,35 +123,28 @@ class Tracing
     }
 
     /**
-     * 结束根跨度并清理
+     * @param string $path
+     * @return bool
      */
-    protected function finishRootSpan()
+    protected function shouldBeExcluded(string $path): bool
     {
-        if ($this->tracer->getRootSpan() !== null) {
-            $this->tracer->getRootSpan()->finish();
-            $this->tracer->flush();
+        foreach ($this->config('excluded_paths') as $excludedPath) {
+            if (Str::is($excludedPath, $path)) {
+                return true;
+            }
         }
+
+        return false;
     }
 
     /**
-     * @param Span $span
-     * @param Request $request
-     * @param $response
+     * @param $key
+     * @param $default
      * @return void
      */
-    public function terminate(Span $span,Request $request, $response)
+    public function config($key = null, $default = null)
     {
-        $route = $request->route();
-        $this->tagResponseData($span, $request, $response);
-
-        if ($this->isLaravelRoute($route)) {
-            $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $request->route()->uri()));
-        }
-
-        if ($this->isLumenRoute($route)) {
-            $routeUri = $this->getLumenRouteUri($request->path(), $route[2]);
-            $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $routeUri));
-        }
+        return config($this->prefix . $key, $default);
     }
 
     /**
@@ -202,6 +167,45 @@ class Tracing
         $span->addTag(Constant::BIZ_CODE, bizCode());
         if (bizCode() > Constant::BIZ_CODE_SUCCESS) {
             $span->addTag("error", bizMsg());
+        }
+    }
+
+    public function isRequest($request): bool
+    {
+        if (!empty($request)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isResponse($response): bool
+    {
+        if (!empty($response) && $response instanceof JsonResponse) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Span $span
+     * @param Request $request
+     * @param $response
+     * @return void
+     */
+    public function terminate(Span $span, Request $request, $response)
+    {
+        $route = $request->route();
+        $this->tagResponseData($span, $request, $response);
+
+        if ($this->isLaravelRoute($route)) {
+            $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $request->route()->uri()));
+        }
+
+        if ($this->isLumenRoute($route)) {
+            $routeUri = $this->getLumenRouteUri($request->path(), $route[2]);
+            $span->setName(sprintf('HTTP Server %s: %s', $request->method(), $routeUri));
         }
     }
 
@@ -255,65 +259,6 @@ class Tracing
 //        }
     }
 
-
-    /**
-     * @param string $path
-     * @return bool
-     */
-    protected function shouldBeExcluded(string $path): bool
-    {
-        foreach ($this->config('excluded_paths') as $excludedPath) {
-            if (Str::is($excludedPath, $path)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param HeaderBag $headers
-     * @return array
-     */
-    protected function filterHeaders(HeaderBag $headers): array
-    {
-        return $this->hideSensitiveHeaders($this->filterAllowedHeaders(collect($headers)))->all();
-    }
-
-    /**
-     * @param Collection $headers
-     * @return Collection
-     */
-    protected function filterAllowedHeaders(Collection $headers): Collection
-    {
-        $allowedHeaders = $this->config('allowed_headers');
-
-        if (in_array('*', $allowedHeaders)) {
-            return $headers;
-        }
-
-        $normalizedHeaders = array_map('strtolower', $allowedHeaders);
-
-        return $headers->filter(function ($value, $name) use ($normalizedHeaders) {
-            return in_array($name, $normalizedHeaders);
-        });
-    }
-
-    protected function hideSensitiveHeaders(Collection $headers): Collection
-    {
-        $sensitiveHeaders = $this->config('sensitive_headers');
-
-        $normalizedHeaders = array_map('strtolower', $sensitiveHeaders);
-
-        $headers->transform(function ($value, $name) use ($normalizedHeaders) {
-            return in_array($name, $normalizedHeaders)
-                ? ['This value is hidden because it contains sensitive info']
-                : $value;
-        });
-
-        return $headers;
-    }
-
     /**
      * @param array $headers
      * @return string
@@ -337,6 +282,49 @@ class Tracing
         }
 
         return base64_encode($content);
+    }
+
+    /**
+     * @param HeaderBag $headers
+     * @return array
+     */
+    protected function filterHeaders(HeaderBag $headers): array
+    {
+        return $this->hideSensitiveHeaders($this->filterAllowedHeaders(collect($headers)))->all();
+    }
+
+    protected function hideSensitiveHeaders(Collection $headers): Collection
+    {
+        $sensitiveHeaders = $this->config('sensitive_headers');
+
+        $normalizedHeaders = array_map('strtolower', $sensitiveHeaders);
+
+        $headers->transform(function ($value, $name) use ($normalizedHeaders) {
+            return in_array($name, $normalizedHeaders)
+                ? ['This value is hidden because it contains sensitive info']
+                : $value;
+        });
+
+        return $headers;
+    }
+
+    /**
+     * @param Collection $headers
+     * @return Collection
+     */
+    protected function filterAllowedHeaders(Collection $headers): Collection
+    {
+        $allowedHeaders = $this->config('allowed_headers');
+
+        if (in_array('*', $allowedHeaders)) {
+            return $headers;
+        }
+
+        $normalizedHeaders = array_map('strtolower', $allowedHeaders);
+
+        return $headers->filter(function ($value, $name) use ($normalizedHeaders) {
+            return in_array($name, $normalizedHeaders);
+        });
     }
 
     /**
@@ -366,7 +354,6 @@ class Tracing
 
         return $input;
     }
-
 
     /**
      * @param $route
@@ -401,5 +388,16 @@ class Tracing
         );
 
         return strtr($path, $replaceMap);
+    }
+
+    /**
+     * 结束根跨度并清理
+     */
+    protected function finishRootSpan()
+    {
+        if ($this->tracer->getRootSpan() !== null) {
+            $this->tracer->getRootSpan()->finish();
+            $this->tracer->flush();
+        }
     }
 }
