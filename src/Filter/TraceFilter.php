@@ -140,9 +140,9 @@ class TraceFilter implements Filter
             $span->addTag('http.request.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getRequest()->getHeaders())));
         }
         // 上报响应头
-        if (($this->interested || $this->config('response_headers')) && !empty($context->getResponse()->getHeaders())) {
-            $span->addTag('http.response.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getResponse()->getHeaders())));
-        }
+//        if (($this->interested || $this->config('response_headers')) && !empty($context->getResponse()->getHeaders())) {
+//            $span->addTag('http.response.headers', $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getResponse()->getHeaders())));
+//        }
         // 上报请求请求
         if ($this->interested || $this->config('request_body') && !empty($context->getRequest()->getBody())) {
             $maxSize = $this->config('request_body_max_size', 0);
@@ -153,14 +153,14 @@ class TraceFilter implements Filter
             }
         }
         // 上报响应数据
-        if (($this->interested || $this->config('response_body')) && !empty($context->getResponse()->getBody())) {
-            $replySize = $context->getResponse()->getBodySize();
-            $maxSize = $this->config('response_body_max_size', 0);
-            if ($maxSize > 0 && $replySize <= $maxSize) {
-                $span->addTag('http.response.size', $replySize);
-                $span->addTag('http.response.body', base64_encode($context->getResponse()->getBody()));
-            }
-        }
+//        if (($this->interested || $this->config('response_body')) && !empty($context->getResponse()->getBody())) {
+//            $replySize = $context->getResponse()->getBodySize();
+//            $maxSize = $this->config('response_body_max_size', 0);
+//            if ($maxSize > 0 && $replySize <= $maxSize) {
+//                $span->addTag('http.response.size', $replySize);
+//                $span->addTag('http.response.body', base64_encode($context->getResponse()->getBody()));
+//            }
+//        }
 
         // 标志结束
         $span->finish();

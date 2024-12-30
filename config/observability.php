@@ -43,6 +43,7 @@ return [
 
     'zipkin' => [
         'endpoint' => env('ZIPKIN_ENDPOINT', env('zipkin.HttpReporterUrl', 'http://127.0.0.1:9411/api/v2/spans')),
+        'reporter_type' => env('ZIPKIN_REPORTER_TYPE', 'http'),
         'options' => [
             '128bit' => env('ZIPKIN_128BIT', false),
             'max_tag_len' => (int)env('ZIPKIN_MAX_TAG_LEN', 1048576),

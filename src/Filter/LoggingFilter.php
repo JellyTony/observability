@@ -121,9 +121,9 @@ class LoggingFilter implements Filter
             $fields['req_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getRequest()->getHeaders()));
         }
         // 打印响应头
-        if (($this->interested || $this->config('response_headers')) && !empty($context->getResponse()->getHeaders())) {
-            $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getResponse()->getHeaders()));
-        }
+//        if (($this->interested || $this->config('response_headers')) && !empty($context->getResponse()->getHeaders())) {
+//            $fields['reply_header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($context->getResponse()->getHeaders()));
+//        }
 
         // 打印请求数据
         if ((($this->interested || $this->config('request_body'))) && !empty($context->getRequest()->getData())) {
@@ -135,13 +135,13 @@ class LoggingFilter implements Filter
         }
 
         // 打印响应数据
-        if (($this->interested || $this->config('response_body')) && !empty($context->getResponse()->getBody())) {
-            $maxSize = $this->config('response_body_max_size', 0);
-            if ($maxSize > 0 && $context->getResponse()->getBodySize() <= $maxSize) {
-                $fields['reply_size'] = $context->getResponse()->getBodySize();
-                $fields['reply_body'] = $context->getResponse()->getBody();
-            }
-        }
+//        if (($this->interested || $this->config('response_body')) && !empty($context->getResponse()->getBody())) {
+//            $maxSize = $this->config('response_body_max_size', 0);
+//            if ($maxSize > 0 && $context->getResponse()->getBodySize() <= $maxSize) {
+//                $fields['reply_size'] = $context->getResponse()->getBodySize();
+//                $fields['reply_body'] = $context->getResponse()->getBody();
+//            }
+//        }
 
         // 根据慢日志阈值和错误情况记录日志
         if ($latency > $this->config('latency_threshold')) {

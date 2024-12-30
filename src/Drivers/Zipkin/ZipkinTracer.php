@@ -75,6 +75,7 @@ class ZipkinTracer implements Tracer
      * @param string $endpointUrl
      * @param bool|null $usesTraceId128bits
      * @param int|null $requestTimeout
+     * @param string $reporterType
      * @param Reporter|null $reporter
      * @param Sampler|null $sampler
      */
@@ -83,6 +84,7 @@ class ZipkinTracer implements Tracer
         string   $endpointUrl,
         bool     $usesTraceId128bits = false,
         int      $requestTimeout = 5,
+        string   $reporterType = 'http',
         Reporter $reporter = null,
         Sampler  $sampler = null
     )
@@ -91,6 +93,7 @@ class ZipkinTracer implements Tracer
         $this->endpointUrl = $endpointUrl;
         $this->usesTraceId128bits = $usesTraceId128bits;
         $this->requestTimeout = $requestTimeout;
+        $this->reporterType = $reporterType;
         $this->reporter = $reporter;
         $this->sampler = $sampler;
     }

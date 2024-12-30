@@ -55,6 +55,7 @@ class TracingDriverManager extends Manager
             $this->config->get('observability.zipkin.endpoint'),
             $this->config->get('observability.zipkin.options.128bit'),
             $this->config->get('observability.zipkin.options.request_timeout', 5),
+            $this->config->get('observability.zipkin.reporter_type', "http"),
             null,
             $this->getZipkinSampler()
         );
