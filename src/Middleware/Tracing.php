@@ -395,8 +395,7 @@ class Tracing
      */
     protected function finishRootSpan()
     {
-        if ($this->tracer->getRootSpan() !== null) {
-            $this->tracer->getRootSpan()->finish();
+        if ($this->tracer !== null) {
             $this->tracer->flush();
         }
     }

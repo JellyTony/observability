@@ -296,6 +296,8 @@ class ZipkinTracer implements Tracer
             if (extension_loaded('posix') && ($user = posix_getpwuid(posix_geteuid())) !== false) {
                 $this->rootSpan->addTag(ResourceAttributes::PROCESS_OWNER, $user['name']);
             }
+
+            $this->rootSpan->finish();
         }
 
         $this->tracing->getTracer()->flush();
