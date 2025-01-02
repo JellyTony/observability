@@ -2,18 +2,18 @@
 
 namespace JellyTony\Observability\Drivers\Zipkin;
 
-use Zipkin\Sampler;
-use Zipkin\Endpoint;
-use Zipkin\Reporter;
-use Zipkin\TracingBuilder;
-use Zipkin\Tracer as RawTracer;
-use Zipkin\Samplers\BinarySampler;
-use Zipkin\Propagation\Propagation;
-use Zipkin\Propagation\SamplingFlags;
-use Zipkin\Reporters\Http as HttpReporter;
-
 use JellyTony\Observability\Contracts\Span;
 use JellyTony\Observability\Contracts\Tracer;
+use Zipkin\DefaultTracing;
+use Zipkin\Endpoint;
+use Zipkin\Propagation\Propagation;
+use Zipkin\Propagation\SamplingFlags;
+use Zipkin\Reporter;
+use Zipkin\Reporters\Http as HttpReporter;
+use Zipkin\Sampler;
+use Zipkin\Samplers\BinarySampler;
+use Zipkin\Tracer as RawTracer;
+use Zipkin\TracingBuilder;
 
 class ZipkinTracer implements Tracer
 {
@@ -55,7 +55,7 @@ class ZipkinTracer implements Tracer
     protected $reporterType = 'http';
 
     /**
-     * @var \Zipkin\DefaultTracing|RawTracer
+     * @var DefaultTracing|RawTracer
      */
     protected $tracing;
 
@@ -132,6 +132,49 @@ class ZipkinTracer implements Tracer
     }
 
     /**
+     * @return Endpoint
+     */
+    protected function createEndpoint(): Endpoint
+    {
+        return Endpoint::createFromGlobals()->withServiceName($this->serviceName);
+    }
+
+    /**
+     * @return Sampler
+     */
+    protected function createSampler(): Sampler
+    {
+        if (!$this->sampler) {
+            $this->sampler = BinarySampler::createAsAlwaysSample();
+        }
+
+        return $this->sampler;
+    }
+
+    /**
+     * @return Reporter
+     */
+    protected function createReporter(): Reporter
+    {
+        if (!$this->reporter) {
+            switch ($this->reporterType) {
+                case 'log':
+                    $this->reporter = new LogReporter();
+                    break;
+                default:
+                    $log = new LogReporter();
+                    $curlFactory = HttpReporter\CurlFactory::create();
+                    $this->reporter = new HttpReporter($curlFactory, [
+                        'endpoint_url' => $this->endpointUrl,
+                        'timeout' => $this->requestTimeout,
+                    ], $log);
+            }
+        }
+
+        return $this->reporter;
+    }
+
+    /**
      * Start a new span based on a parent trace context. The context may come either from
      * external source (extracted from HTTP request, AMQP message, etc., see extract method)
      * or received from another span in this service.
@@ -165,6 +208,16 @@ class ZipkinTracer implements Tracer
     }
 
     /**
+     * All tracing commands start with a {@link Span}. Use a tracer to create spans.
+     *
+     * @return RawTracer
+     */
+    public function getTracer(): RawTracer
+    {
+        return $this->tracing->getTracer();
+    }
+
+    /**
      * Retrieve the root span of the service
      *
      * @return Span|null
@@ -182,16 +235,6 @@ class ZipkinTracer implements Tracer
     public function getCurrentSpan(): ?Span
     {
         return $this->currentSpan;
-    }
-
-    /**
-     * All tracing commands start with a {@link Span}. Use a tracer to create spans.
-     *
-     * @return RawTracer
-     */
-    public function getTracer(): RawTracer
-    {
-        return $this->tracing->getTracer();
     }
 
     /**
@@ -226,48 +269,5 @@ class ZipkinTracer implements Tracer
         $this->tracing->getTracer()->flush();
         $this->rootSpan = null;
         $this->currentSpan = null;
-    }
-
-    /**
-     * @return Reporter
-     */
-    protected function createReporter(): Reporter
-    {
-        if (!$this->reporter) {
-            switch ($this->reporterType) {
-                case 'log':
-                    $this->reporter = new LogReporter();
-                    break;
-                default:
-                    $log = new LogReporter();
-                    $curlFactory = HttpReporter\CurlFactory::create();
-                    $this->reporter = new HttpReporter($curlFactory, [
-                        'endpoint_url' => $this->endpointUrl,
-                        'timeout' => $this->requestTimeout,
-                    ], $log);
-            }
-        }
-
-        return $this->reporter;
-    }
-
-    /**
-     * @return Endpoint
-     */
-    protected function createEndpoint(): Endpoint
-    {
-        return Endpoint::createFromGlobals()->withServiceName($this->serviceName);
-    }
-
-    /**
-     * @return Sampler
-     */
-    protected function createSampler(): Sampler
-    {
-        if (!$this->sampler) {
-            $this->sampler = BinarySampler::createAsAlwaysSample();
-        }
-
-        return $this->sampler;
     }
 }
