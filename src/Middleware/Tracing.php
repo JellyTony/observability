@@ -418,7 +418,6 @@ class Tracing
         if (isset($_SERVER['argv']) ? $_SERVER['argv'] : null) {
             $span->setTags([
                 ResourceAttributes::PROCESS_COMMAND => $_SERVER['argv'][0],
-                ResourceAttributes::PROCESS_COMMAND_ARGS => $_SERVER['argv'],
             ]);
         }
 
