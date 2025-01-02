@@ -2,7 +2,6 @@
 
 namespace JellyTony\Observability\Drivers\Zipkin;
 
-use JellyTony\Observability\Constant\ResourceAttributes;
 use JellyTony\Observability\Contracts\Span;
 use JellyTony\Observability\Contracts\Tracer;
 use Zipkin\DefaultTracing;
@@ -15,8 +14,6 @@ use Zipkin\Sampler;
 use Zipkin\Samplers\BinarySampler;
 use Zipkin\Tracer as RawTracer;
 use Zipkin\TracingBuilder;
-use function posix_geteuid;
-use function posix_getpwuid;
 
 class ZipkinTracer implements Tracer
 {
@@ -269,37 +266,6 @@ class ZipkinTracer implements Tracer
      */
     public function flush(): void
     {
-        if (!empty($this->rootSpan)) {
-            $this->rootSpan->setTags([
-                ResourceAttributes::HOST_NAME => php_uname('n'),
-                ResourceAttributes::HOST_ARCH => php_uname('m'),
-                ResourceAttributes::PROCESS_RUNTIME_NAME => php_sapi_name(),
-                ResourceAttributes::PROCESS_RUNTIME_VERSION => PHP_VERSION,
-                ResourceAttributes::OS_DESCRIPTION => php_uname('r'),
-                ResourceAttributes::OS_NAME => PHP_OS,
-                ResourceAttributes::OS_VERSION => php_uname('v'),
-                ResourceAttributes::PROCESS_PID => getmypid(),
-                ResourceAttributes::PROCESS_EXECUTABLE_PATH => PHP_BINARY,
-            ]);
-
-            /**
-             * @psalm-suppress PossiblyUndefinedArrayOffset
-             */
-            if (isset($_SERVER['argv']) ? $_SERVER['argv'] : null) {
-                $this->rootSpan->setTags([
-                    ResourceAttributes::PROCESS_COMMAND => $_SERVER['argv'][0],
-                    ResourceAttributes::PROCESS_COMMAND_ARGS => $_SERVER['argv'],
-                ]);
-            }
-
-            /** @phan-suppress-next-line PhanTypeComparisonFromArray */
-            if (extension_loaded('posix') && ($user = posix_getpwuid(posix_geteuid())) !== false) {
-                $this->rootSpan->addTag(ResourceAttributes::PROCESS_OWNER, $user['name']);
-            }
-
-            $this->rootSpan->finish();
-        }
-
         $this->tracing->getTracer()->flush();
         $this->rootSpan = null;
         $this->currentSpan = null;

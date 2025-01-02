@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use JellyTony\Observability\Constant\Constant;
+use JellyTony\Observability\Constant\ResourceAttributes;
 use JellyTony\Observability\Contracts\Span;
 use JellyTony\Observability\Contracts\Tracer;
 use JellyTony\Observability\Metadata\Metadata;
@@ -116,6 +117,8 @@ class Tracing
         }
 
         $this->terminate($span, $request, $reply);
+
+        $this->tagProcess($span);
 
         $this->finishRootSpan();
 
@@ -391,10 +394,48 @@ class Tracing
     }
 
     /**
+     * 标记进程信息
+     * @param Span $span
+     * @return void
+     */
+    protected function tagProcess(Span $span)
+    {
+        $span->setTags([
+            ResourceAttributes::HOST_NAME => php_uname('n'),
+            ResourceAttributes::HOST_ARCH => php_uname('m'),
+            ResourceAttributes::PROCESS_RUNTIME_NAME => php_sapi_name(),
+            ResourceAttributes::PROCESS_RUNTIME_VERSION => PHP_VERSION,
+            ResourceAttributes::OS_DESCRIPTION => php_uname('r'),
+            ResourceAttributes::OS_NAME => PHP_OS,
+            ResourceAttributes::OS_VERSION => php_uname('v'),
+            ResourceAttributes::PROCESS_PID => getmypid(),
+            ResourceAttributes::PROCESS_EXECUTABLE_PATH => PHP_BINARY,
+        ]);
+
+        /**
+         * @psalm-suppress PossiblyUndefinedArrayOffset
+         */
+        if (isset($_SERVER['argv']) ? $_SERVER['argv'] : null) {
+            $span->setTags([
+                ResourceAttributes::PROCESS_COMMAND => $_SERVER['argv'][0],
+                ResourceAttributes::PROCESS_COMMAND_ARGS => $_SERVER['argv'],
+            ]);
+        }
+
+        /** @phan-suppress-next-line PhanTypeComparisonFromArray */
+        if (extension_loaded('posix') && ($user = posix_getpwuid(posix_geteuid())) !== false) {
+            $span->addTag(ResourceAttributes::PROCESS_OWNER, $user['name']);
+        }
+    }
+
+    /**
      * 结束根跨度并清理
      */
     protected function finishRootSpan()
     {
+        if ($this->tracer->getRootSpan() !== null) {
+            $this->tracer->getRootSpan()->finish();
+        }
         if ($this->tracer !== null) {
             $this->tracer->flush();
         }
