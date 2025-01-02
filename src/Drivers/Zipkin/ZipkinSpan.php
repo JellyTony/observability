@@ -3,6 +3,7 @@
 namespace JellyTony\Observability\Drivers\Zipkin;
 
 use JellyTony\Observability\Contracts\Span;
+use Throwable;
 use Zipkin\Endpoint;
 use Zipkin\Propagation\TraceContext;
 use Zipkin\Span as RawSpan;
@@ -134,9 +135,9 @@ class ZipkinSpan implements Span
 
     /**
      * Adds tags depending on the configured {@link TraceFilter::errorParser() error parser}
-     * @param \Throwable $e
+     * @param Throwable $e
      */
-    public function setError(\Throwable $e): void
+    public function setError(Throwable $e): void
     {
         $this->span->setError($e);
     }
