@@ -2,10 +2,10 @@
 
 namespace JellyTony\Observability\Drivers\Zipkin;
 
+use JellyTony\Observability\Contracts\Span;
 use Zipkin\Endpoint;
 use Zipkin\Propagation\TraceContext;
 use Zipkin\Span as RawSpan;
-use JellyTony\Observability\Contracts\Span;
 
 class ZipkinSpan implements Span
 {
@@ -83,6 +83,15 @@ class ZipkinSpan implements Span
         $this->span->setKind($kind);
     }
 
+    public function addTag($key, $val): void
+    {
+        if (empty($key) || empty($val)) {
+            return;
+        }
+
+        $this->tag($key, $val);
+    }
+
     /**
      * Tags give your span context for search, viewing and analysis. For example, a key
      * "your_app.version" would let you lookup spans by version. A tag {@link Zipkin\Tags\SQL_QUERY}
@@ -95,22 +104,13 @@ class ZipkinSpan implements Span
      */
     public function tag(string $key, string $value): void
     {
-        if (empty($key) ||empty($value)) {
+        if (empty($key) || empty($value)) {
             return;
         }
         if (is_numeric($value)) {
             $value = strval($value);
         }
         $this->span->tag($key, $value);
-    }
-
-    public function addTag($key,$val): void
-    {
-        if (empty($key) ||empty($val)) {
-            return;
-        }
-
-        $this->tag($key,$val);
     }
 
     /**
@@ -123,6 +123,9 @@ class ZipkinSpan implements Span
         foreach ($values as $k => $v) {
             if (empty($k) || empty($v)) {
                 continue;
+            }
+            if (is_array($v)) {
+                $v = json_encode($v);
             }
 
             $this->tag($k, $v);
