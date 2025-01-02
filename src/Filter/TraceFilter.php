@@ -164,7 +164,7 @@ class TraceFilter implements Filter
 //            }
 //        }
 
-        $this->tagProcess($span);
+//        $this->tagProcess($span);
 
         // 标志结束
         $span->finish();
