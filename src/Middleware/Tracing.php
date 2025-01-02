@@ -401,6 +401,8 @@ class Tracing
     protected function tagProcess(Span $span)
     {
         $span->setTags([
+            ResourceAttributes::SERVICE_NAME => 'user',
+            ResourceAttributes::SERVICE_VERSION => '1.0.0',
             ResourceAttributes::HOST_NAME => php_uname('n'),
             ResourceAttributes::HOST_ARCH => php_uname('m'),
             ResourceAttributes::PROCESS_RUNTIME_NAME => php_sapi_name(),
