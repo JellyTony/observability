@@ -3,14 +3,16 @@
 namespace JellyTony\Observability\Filter;
 
 use Closure;
-use Zipkin\Tags;
+use Exception;
 use Illuminate\Support\Str;
-use Zipkin\Propagation\Map;
-use JellyTony\Observability\Facades\Trace;
-use JellyTony\Observability\Contracts\Filter;
-use JellyTony\Observability\Util\HeaderFilter;
-use JellyTony\Observability\Contracts\Context;
 use JellyTony\Observability\Constant\Constant;
+use JellyTony\Observability\Constant\ResourceAttributes;
+use JellyTony\Observability\Contracts\Context;
+use JellyTony\Observability\Contracts\Filter;
+use JellyTony\Observability\Facades\Trace;
+use JellyTony\Observability\Util\HeaderFilter;
+use Zipkin\Propagation\Map;
+use Zipkin\Tags;
 
 class TraceFilter implements Filter
 {
@@ -41,22 +43,6 @@ class TraceFilter implements Filter
     public function config($key = null, $default = null)
     {
         return config($this->prefix . $key, $default);
-    }
-
-    /**
-     * 判断是否需要过滤
-     * @param string $path
-     * @return bool
-     */
-    protected function shouldBeExcluded(string $path): bool
-    {
-        foreach ($this->config('excluded_paths') as $excludedPath) {
-            if (Str::is($excludedPath, $path)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function handle(Context $context, Closure $next, array $options = [])
@@ -104,7 +90,7 @@ class TraceFilter implements Filter
             $endTime = microtime(true);
             $this->terminate($context, $startTime, $endTime, $span);
             return $response;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $endTime = microtime(true);
             list($bizCode, $bizMsg) = convertExceptionToBizError($e);
             $context->setBizResult($bizCode, $bizMsg);
@@ -112,6 +98,22 @@ class TraceFilter implements Filter
             // 继续抛出异常
             throw $e;
         }
+    }
+
+    /**
+     * 判断是否需要过滤
+     * @param string $path
+     * @return bool
+     */
+    protected function shouldBeExcluded(string $path): bool
+    {
+        foreach ($this->config('excluded_paths') as $excludedPath) {
+            if (Str::is($excludedPath, $path)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function terminate(Context $context, $startTime, $endTime, $span)
@@ -162,7 +164,44 @@ class TraceFilter implements Filter
 //            }
 //        }
 
+        $this->tagProcess($span);
+
         // 标志结束
         $span->finish();
+    }
+
+    /**
+     * 标记进程信息
+     * @param Span $span
+     * @return void
+     */
+    protected function tagProcess($span)
+    {
+        $span->setTags([
+            ResourceAttributes::OS_DESCRIPTION => php_uname('r'),
+            ResourceAttributes::OS_NAME => PHP_OS,
+            ResourceAttributes::OS_VERSION => php_uname('v'),
+            ResourceAttributes::HOST_NAME => php_uname('n'),
+            ResourceAttributes::HOST_ARCH => php_uname('m'),
+            ResourceAttributes::PROCESS_RUNTIME_NAME => php_sapi_name(),
+            ResourceAttributes::PROCESS_RUNTIME_VERSION => PHP_VERSION,
+            ResourceAttributes::PROCESS_PID => getmypid(),
+            ResourceAttributes::PROCESS_EXECUTABLE_PATH => PHP_BINARY,
+        ]);
+
+        /**
+         * @psalm-suppress PossiblyUndefinedArrayOffset
+         */
+        if (isset($_SERVER['argv']) ? $_SERVER['argv'] : null) {
+            $span->setTags([
+                ResourceAttributes::PROCESS_COMMAND => $_SERVER['argv'][0],
+                ResourceAttributes::PROCESS_COMMAND_ARGS => $_SERVER['argv'],
+            ]);
+        }
+
+        /** @phan-suppress-next-line PhanTypeComparisonFromArray */
+        if (extension_loaded('posix') && ($user = posix_getpwuid(posix_geteuid())) !== false) {
+            $span->addTag(ResourceAttributes::PROCESS_OWNER, $user['name']);
+        }
     }
 }

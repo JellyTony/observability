@@ -401,15 +401,13 @@ class Tracing
     protected function tagProcess(Span $span)
     {
         $span->setTags([
-            ResourceAttributes::SERVICE_NAME => 'user',
-            ResourceAttributes::SERVICE_VERSION => '1.0.0',
+            ResourceAttributes::OS_DESCRIPTION => php_uname('r'),
+            ResourceAttributes::OS_NAME => PHP_OS,
+            ResourceAttributes::OS_VERSION => php_uname('v'),
             ResourceAttributes::HOST_NAME => php_uname('n'),
             ResourceAttributes::HOST_ARCH => php_uname('m'),
             ResourceAttributes::PROCESS_RUNTIME_NAME => php_sapi_name(),
             ResourceAttributes::PROCESS_RUNTIME_VERSION => PHP_VERSION,
-            ResourceAttributes::OS_DESCRIPTION => php_uname('r'),
-            ResourceAttributes::OS_NAME => PHP_OS,
-            ResourceAttributes::OS_VERSION => php_uname('v'),
             ResourceAttributes::PROCESS_PID => getmypid(),
             ResourceAttributes::PROCESS_EXECUTABLE_PATH => PHP_BINARY,
         ]);
