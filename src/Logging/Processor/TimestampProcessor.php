@@ -10,7 +10,7 @@ class TimestampProcessor implements LogProcessor
     public function process(LogRecord $record): LogRecord
     {
         if ($record->has('datetime')) {
-            $record->set('ts', $record->get('datetime')->format('Y-m-d\TH:i:s.vO'));
+            $record->set('time', $record->get('datetime')->format('Y-m-d\TH:i:s.vO'));
             $record->delete('datetime');
         }
 
