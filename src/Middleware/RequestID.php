@@ -3,14 +3,36 @@
 namespace JellyTony\Observability\Middleware;
 
 use Closure;
-use Zipkin\Propagation\Id;
 use Illuminate\Http\Request;
 use JellyTony\Observability\Constant\Constant;
+use JellyTony\Observability\Util\HeaderFilter;
+use Log;
+use Zipkin\Propagation\Id;
 
 class RequestID
 {
+    private $headerFilter;
+
+
+    /**
+     * TraceRequests constructor.
+     * @param Repository $config
+     */
+    public function __construct(Repository $config)
+    {
+        $this->headerFilter = new HeaderFilter([
+            'allowed_headers' => $this->config('allowed_headers'), // 允许的头部
+            'sensitive_headers' => $this->config('sensitive_headers'), // 敏感的头部
+            'sensitive_input' => $this->config('sensitive_input'),  // 敏感的输入
+        ]);
+    }
+
     public function handle(Request $request, Closure $next)
     {
+        $fields = [];
+        $fields['header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
+        \Log::debug('http do raw header', ['global_fields' => $fields]);
+
         // 兼容swoole的问题
         if (isset($_SERVER['HTTP_X-REQUEST-ID']) && !empty($_SERVER['HTTP_X-REQUEST-ID'])) {
             $_SERVER[Constant::HTTP_X_REQUEST_ID] = $_SERVER['HTTP_X-REQUEST-ID'];
