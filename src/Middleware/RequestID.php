@@ -28,7 +28,9 @@ class RequestID
 
     public function handle(Request $request, Closure $next)
     {
-        $fields = [];
+        $fields = [
+            'path' => $request->path(),
+        ];
         $fields['header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
         Log::debug('http do raw header', ['global_fields' => $fields]);
 
