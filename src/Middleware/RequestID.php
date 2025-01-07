@@ -28,7 +28,7 @@ class RequestID
     // 判断是否是swoole请求头
     public function hasSwooleRequestHeader($key)
     {
-        return !empty($_SERVER[$key]);
+        return isset($_SERVER[$key]) && !empty($_SERVER[$key]);
     }
 
     public function handle(Request $request, Closure $next)
