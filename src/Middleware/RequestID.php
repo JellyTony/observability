@@ -16,9 +16,8 @@ class RequestID
 
     /**
      * TraceRequests constructor.
-     * @param Repository $config
      */
-    public function __construct(Repository $config)
+    public function __construct()
     {
         $this->headerFilter = new HeaderFilter([
             'allowed_headers' => $this->config('allowed_headers'), // 允许的头部
