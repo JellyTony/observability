@@ -65,8 +65,10 @@ class RequestID
     {
         foreach (self::SWOOLE_HEADERS_MAP as $swooleKey => $constantKey) {
             if ($this->hasSwooleRequestHeader($swooleKey)) {
-                $_SERVER[$constantKey] = $_SERVER[$swooleKey];
-                $request->headers->set($constantKey, $_SERVER[$swooleKey]);
+                $val = $_SERVER[$swooleKey];
+                $_SERVER[$constantKey] = $val;
+                $headerKey = str_replace('HTTP_X_', 'X_', $constantKey);
+                $request->headers->set($headerKey, $val);
             }
         }
     }
