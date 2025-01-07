@@ -15,33 +15,41 @@ class RequestID
         'metrics'
     ];
 
+    protected const SWOOLE_HEADERS_MAP = [
+        'HTTP_X-REQUEST-ID' => Constant::HTTP_X_REQUEST_ID,
+        'HTTP_X-B3-TRACEID' => Constant::HTTP_X_B3_TRACE_ID,
+        'HTTP_X_B3_SPANID' => Constant::HTTP_X_B3_SPAN_ID,
+        'HTTP_X_B3_PARENTSPANID' => Constant::HTTP_X_B3_PARENT_SPAN_ID,
+        'HTTP_X_B3_SAMPLED' => Constant::HTTP_X_B3_SAMPLED,
+        'HTTP_X_B3_FLAGS' => Constant::HTTP_X_B3_FLAGS,
+        'HTTP_MP-DEBUG' => Constant::HTTP_MP_DEBUG,
+    ];
+
+    // 判断是否是swoole请求头
+    public function hasSwooleRequestHeader($key)
+    {
+        return isset($_SERVER[$key]) && !empty($_SERVER[$key]);
+    }
+
     public function handle(Request $request, Closure $next)
     {
         $callerService = $request->header('x-md-local-caller_service', 'unknown');
-        // 兼容swoole的问题
-        if (isset($_SERVER['HTTP_X-REQUEST-ID']) && !empty($_SERVER['HTTP_X-REQUEST-ID'])) {
-            $_SERVER[Constant::HTTP_X_REQUEST_ID] = $_SERVER['HTTP_X-REQUEST-ID'];
-        }
-        if (isset($_SERVER['HTTP_X-B3-TRACEID']) && !empty($_SERVER['HTTP_X-B3-TRACEID'])) {
-            $_SERVER[Constant::HTTP_X_B3_TRACE_ID] = $_SERVER['HTTP_X-B3-TRACEID'];
-        }
-        if (isset($_SERVER['HTTP_MP-DEBUG']) && !empty($_SERVER['HTTP_MP-DEBUG'])) {
-            $_SERVER[Constant::HTTP_MP_DEBUG] = $_SERVER['HTTP_MP-DEBUG'];
-        }
+        // 统一处理 Swoole 请求头
+        $this->handleSwooleHeaders($request);
 
         // 注入header头 x-request-id
         if (!isset($_SERVER[Constant::HTTP_X_REQUEST_ID]) || empty($_SERVER[Constant::HTTP_X_REQUEST_ID])) {
-            if(!$this->shouldBeExcluded($request->path())) {
+            if (!$this->shouldBeExcluded($request->path())) {
                 \Log::debug('need trace request_id request from ' . $callerService, ['global_fields' => [
                     "caller" => $callerService,
                     'route' => $request->path(),
                 ]]);
             }
-            $_SERVER[Constant::HTTP_X_REQUEST_ID] = uuidV4();
+//            $_SERVER[Constant::HTTP_X_REQUEST_ID] = uuidV4();
         }
         // 注入 header 头x-b3-traceid
         if (!isset($_SERVER[Constant::HTTP_X_B3_TRACE_ID]) || empty($_SERVER[Constant::HTTP_X_B3_TRACE_ID])) {
-            if(!$this->shouldBeExcluded($request->path())) {
+            if (!$this->shouldBeExcluded($request->path())) {
                 \Log::debug('need trace trace_id request from ' . $callerService, ['global_fields' => [
                     "caller" => $callerService,
                     'route' => $request->path(),
@@ -51,6 +59,16 @@ class RequestID
         }
 
         return $next($request);
+    }
+
+    protected function handleSwooleHeaders(Request $request)
+    {
+        foreach (self::SWOOLE_HEADERS_MAP as $swooleKey => $constantKey) {
+            if ($this->hasSwooleRequestHeader($swooleKey)) {
+                $_SERVER[$constantKey] = $_SERVER[$swooleKey];
+                $request->headers->set($constantKey, $_SERVER[$swooleKey]);
+            }
+        }
     }
 
     protected function shouldBeExcluded(string $path): bool
