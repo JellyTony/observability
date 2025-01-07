@@ -18,17 +18,17 @@ class RequestID
     protected const SWOOLE_HEADERS_MAP = [
         'HTTP_X-REQUEST-ID' => Constant::HTTP_X_REQUEST_ID,
         'HTTP_X-B3-TRACEID' => Constant::HTTP_X_B3_TRACE_ID,
-        'HTTP_X_B3_SPANID' => Constant::HTTP_X_B3_SPAN_ID,
-        'HTTP_X_B3_PARENTSPANID' => Constant::HTTP_X_B3_PARENT_SPAN_ID,
-        'HTTP_X_B3_SAMPLED' => Constant::HTTP_X_B3_SAMPLED,
-        'HTTP_X_B3_FLAGS' => Constant::HTTP_X_B3_FLAGS,
+        'HTTP_X-B3-SPANID' => Constant::HTTP_X_B3_SPAN_ID,
+        'HTTP_X-B3-PARENTSPANID' => Constant::HTTP_X_B3_PARENT_SPAN_ID,
+        'HTTP_X-B3-SAMPLED' => Constant::HTTP_X_B3_SAMPLED,
+        'HTTP_X-B3-FLAGS' => Constant::HTTP_X_B3_FLAGS,
         'HTTP_MP-DEBUG' => Constant::HTTP_MP_DEBUG,
     ];
 
     // 判断是否是swoole请求头
     public function hasSwooleRequestHeader($key)
     {
-        return isset($_SERVER[$key]) && !empty($_SERVER[$key]);
+        return !empty($_SERVER[$key]);
     }
 
     public function handle(Request $request, Closure $next)
