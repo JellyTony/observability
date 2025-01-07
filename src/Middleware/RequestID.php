@@ -19,7 +19,11 @@ class RequestID
      */
     public function __construct()
     {
-        $this->headerFilter = new HeaderFilter();
+        $this->headerFilter = new HeaderFilter([
+            'allowed_headers' => ['*'], // 允许的头部
+            'sensitive_headers' => [], // 敏感的头部
+            'sensitive_input' => [],  // 敏感的输入
+        ]);
     }
 
     public function handle(Request $request, Closure $next)
