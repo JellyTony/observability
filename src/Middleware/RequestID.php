@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Http\Request;
 use JellyTony\Observability\Constant\Constant;
 use JellyTony\Observability\Util\HeaderFilter;
-use Log;
 use Zipkin\Propagation\Id;
 
 class RequestID
@@ -28,11 +27,10 @@ class RequestID
 
     public function handle(Request $request, Closure $next)
     {
-        $fields = [
-            'path' => $request->path(),
-        ];
+        $fields = [];
+        $fields['path'] = $request->path();
         $fields['header'] = $this->headerFilter->transformedHeaders($this->headerFilter->filterHeaders($request->headers->all()));
-        Log::debug('http do raw header', ['global_fields' => $fields]);
+        \Log::debug('httpraw header', ['global_fields' => $fields]);
 
         // 兼容swoole的问题
         if (isset($_SERVER['HTTP_X-REQUEST-ID']) && !empty($_SERVER['HTTP_X-REQUEST-ID'])) {
