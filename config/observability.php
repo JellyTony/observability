@@ -102,7 +102,7 @@ return [
                 'disabled' => (bool)env('MIDDLEWARE_CLIENT_LOGGING_DISABLED', false), // 是否禁用请求日志
                 'time_format' => env('MIDDLEWARE_CLIENT_LOGGING_TIME_FORMAT', 'Y-m-d H:i:s'), // 时间格式
                 'latency_threshold' => (int)env('MIDDLEWARE_CLIENT_REQUEST_LATENCY_THRESHOLD', 3000), // 延迟阈值，默认为 3 秒
-                'access_level' => env('MIDDLEWARE_CLIENT_LOGGING_ACCESS_LEVEL', 'info'), // 请求日志级别，默认为 info，分为 info 和 debug 两种
+                'access_level' => env('MIDDLEWARE_CLIENT_LOGGING_ACCESS_LEVEL', 'debug'), // 请求日志级别，默认为 info，分为 info 和 debug 两种
                 'excluded_paths' => envArray('MIDDLEWARE_CLIENT_LOGGING_EXCLUDED_PATHS'), // 不记录的请求路径
                 'request_body' => (bool)env('MIDDLEWARE_CLIENT_LOGGING_REQUEST_BODY', false), // 是否记录请求参数
                 'request_body_max_size' => (int)env('MIDDLEWARE_CLIENT_LOGGING_REQUEST_BODY_MAX_SIZE', 102400), // 请求参数最大值，默认为 2kb
