@@ -33,8 +33,6 @@ class Context  implements RawContext
         }
         $this->request = $request;
         $this->response = $response;
-
-        return $this;
     }
 
     public function setRequest(Request $request): RawContext
