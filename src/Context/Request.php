@@ -4,6 +4,7 @@ namespace JellyTony\Observability\Context;
 
 use JellyTony\Observability\Util\Uri;
 use JellyTony\Observability\Contracts\UrlAbstract;
+use JellyTony\Observability\Util\UriNull;
 
 class Request
 {
@@ -27,7 +28,11 @@ class Request
     )
     {
         if (!($uri instanceof UrlAbstract)) {
-            $uri = new Uri($uri);
+            if ($this->parse($uri) === false) {
+                $uri = new UriNull($uri);
+            } else {
+                $uri = new Uri($uri);
+            }
         }
 
         $this->method = strtoupper($method);
@@ -35,6 +40,34 @@ class Request
         $this->setBody($body);
         $this->setHeaders($headers);
         $this->protocol = $version;
+    }
+
+    private function parse(string $url)
+    {
+        // If IPv6
+        $prefix = '';
+        if (preg_match('%^(.*://\[[0-9:a-f]+\])(.*?)$%', $url, $matches)) {
+            /** @var array{0:string, 1:string, 2:string} $matches */
+            $prefix = $matches[1];
+            $url = $matches[2];
+        }
+
+        /** @var string */
+        $encodedUrl = preg_replace_callback(
+            '%[^:/@?&=#]+%usD',
+            static function ($matches) {
+                return urlencode($matches[0]);
+            },
+            $url
+        );
+
+        $result = parse_url($prefix . $encodedUrl);
+
+        if ($result === false) {
+            return false;
+        }
+
+        return true;
     }
 
     public function getMethod(): string
@@ -85,7 +118,7 @@ class Request
         }
 
         if (($port = $this->uri->getPort()) !== null) {
-            $host .= ':'.$port;
+            $host .= ':' . $port;
         }
 
         if (isset($this->headerNames['host'])) {
