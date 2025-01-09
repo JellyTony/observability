@@ -25,7 +25,7 @@ trait BusinessContextTrait
      */
     public function setBizMsg($msg)
     {
-        if (!empty($this->bizMsg)) {
+        if (!empty($this->bizMsg) && $this->bizMsg !== 'success') {
             return;
         }
         $this->bizMsg = $msg;
@@ -39,8 +39,11 @@ trait BusinessContextTrait
      */
     public function setBizResult($code, $msg)
     {
-        $this->setBizCode($code);
-        $this->setBizMsg($msg);
+        if ($this->bizCode > 1000) {
+            return;
+        }
+        $this->bizCode = $code;
+        $this->bizMsg = $msg;
     }
 
     /**
@@ -53,15 +56,8 @@ trait BusinessContextTrait
         if (empty($content) || !is_array($content)) {
             return;
         }
-
-        if (!empty($content['code']) && $this->bizCode > 1000) {
-            return;
-        }
-        if (!empty($content['code'])) {
-            $this->setBizCode($content['code']);
-        }
-        if (!empty($content['msg'])) {
-            $this->setBizMsg($content['msg']);
+        if (!empty($content['code']) && !empty($content['msg'])) {
+            $this->setBizResult($content['code'], $content['msg']);
         }
     }
 
