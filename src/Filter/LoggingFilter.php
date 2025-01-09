@@ -153,7 +153,7 @@ class LoggingFilter implements Filter
         } elseif (isset($fields['error'])) {
             \Log::error('http client', ['global_fields' => $fields]);
         } else {
-            if ($this->interested || $this->config('access_level') == 'info') {
+            if ($this->interested || $this->config('access_level') === 'info') {
                 \Log::info('http client', ['global_fields' => $fields]);
             } else {
                 \Log::debug('http client', ['global_fields' => $fields]);

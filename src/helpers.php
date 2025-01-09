@@ -80,11 +80,12 @@ if (!function_exists('appVersion')) {
 if (!function_exists('isMpDebug')) {
     /**
      * 判断是否开启调试模式
+     * 非生产环境、存在mp_debug参数、业务码大于1000时，开启调试模式
      * @return bool
      */
     function isMpDebug(): bool
     {
-        return isset($_SERVER[Constant::HTTP_MP_DEBUG]) || (bizCode()) > Constant::BIZ_CODE_SUCCESS;
+        return  appEnv() !== "prod" || isset($_SERVER[Constant::HTTP_MP_DEBUG]) || (bizCode()) > Constant::BIZ_CODE_SUCCESS;
     }
 }
 
